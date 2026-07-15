@@ -63,8 +63,10 @@ class ReservaControllerIT {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    private static final AtomicInteger PLACA_SEQ = new AtomicInteger();
+
     private Viaje crearViajeConAsientos(int numeroAsientos) {
-        Camioneta camioneta = camionetaRepository.save(new Camioneta("XYZ-" + System.nanoTime() % 1000, "Ayacucho - Sivia"));
+        Camioneta camioneta = camionetaRepository.save(new Camioneta("XYZ-" + PLACA_SEQ.incrementAndGet(), "Ayacucho - Sivia"));
         Viaje viaje = viajeRepository.save(new Viaje("Ayacucho", "Sivia", LocalDate.now().plusDays(2), LocalTime.of(9, 0),
                 camioneta, new BigDecimal("40.00"), numeroAsientos));
         for (int i = 1; i <= numeroAsientos; i++) {
