@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(pageTitle)">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:replace="${pageTitle}">Pasajes VRAEM</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/css/bootstrap.min.css}" />
+</head>
+<body>
+    <nav th:fragment="nav" class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/viajes}">Pasajes VRAEM</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav me-auto" sec:authorize="isAuthenticated()" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+                    <li class="nav-item"><a class="nav-link" th:href="@{/viajes}">Viajes</a></li>
+                    <li class="nav-item" sec:authorize="hasRole('PASAJERO')">
+                        <a class="nav-link" th:href="@{/reservas}">Mis reservas</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" th:href="@{/admin}">Panel ADMIN</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/login}">Iniciar sesion</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/registro}">Registrarse</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" class="d-flex">
+                            <span class="navbar-text text-white me-2" sec:authentication="name">usuario</span>
+                            <button class="btn btn-outline-light btn-sm" type="submit">Salir</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <footer th:fragment="footer" class="text-center text-muted py-4 mt-5 border-top">
+        <small>Pasajes VRAEM &mdash; Ayacucho / San Francisco / Sivia / Santa Rosa / Kimbiri / Pichari</small>
+    </footer>
+</body>
+</html>

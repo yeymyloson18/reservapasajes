@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Panel ADMIN - Pasajes VRAEM</title>
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: nav}"></nav>
+
+    <main class="container">
+        <h1 class="h3 mb-4">Panel de administracion</h1>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <p class="text-muted mb-1">Viajes activos</p>
+                        <p class="display-6 mb-0" th:text="${resumen.viajesActivos()}">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <p class="text-muted mb-1">Reservas pendientes</p>
+                        <p class="display-6 mb-0" th:text="${resumen.reservasPendientes()}">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a class="btn btn-primary" th:href="@{/admin/viajes/nuevo}">Nuevo viaje</a>
+            <a class="btn btn-outline-primary" th:href="@{/admin/reservas}">Ver reservas</a>
+            <a class="btn btn-outline-secondary" th:href="@{/viajes}">Ver viajes publicados</a>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

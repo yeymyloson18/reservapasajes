@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Mi reserva - Pasajes VRAEM</title>
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: nav}"></nav>
+
+    <main class="container" style="max-width: 640px;">
+
+        <div th:if="${reserva.estado.name() == 'PAGADO'}" class="card border-success mb-4">
+            <div class="card-body text-center">
+                <p class="text-muted mb-1">Codigo de reserva</p>
+                <h1 class="display-6 mb-3" th:text="${reserva.codigoReserva}">ABCD1234</h1>
+                <span class="badge bg-success">Boleto pagado</span>
+            </div>
+        </div>
+
+        <div th:if="${reserva.estado.name() == 'PENDIENTE'}" class="alert alert-warning">
+            Reserva pendiente de pago. Codigo provisional: <strong th:text="${reserva.codigoReserva}">ABCD1234</strong>
+        </div>
+
+        <div th:if="${reserva.estado.name() == 'EXPIRADA'}" class="alert alert-secondary">
+            Esta reserva expiro por falta de pago y los asientos fueron liberados.
+        </div>
+
+        <h2 class="h5">Viaje</h2>
+        <p>
+            <span th:text="${reserva.viaje.origen + ' &rarr; ' + reserva.viaje.destino}">Ruta</span><br />
+            <span th:text="${reserva.viaje.fecha}">2026-01-01</span> &middot;
+            <span th:text="${reserva.viaje.hora}">08:00</span>
+        </p>
+
+        <h2 class="h5">Pasajeros</h2>
+        <ul class="list-group mb-3">
+            <li class="list-group-item d-flex justify-content-between" th:each="asiento : ${asientos}">
+                <span>Asiento <strong th:text="${asiento.numero}">1</strong> &mdash;
+                    <span th:text="${asiento.nombrePasajero}">Nombre</span>
+                    (DNI <span th:text="${asiento.dniPasajero}">00000000</span>)</span>
+            </li>
+        </ul>
+
+        <p class="fs-5">Monto total: S/ <strong th:text="${reserva.montoTotal}">0.00</strong></p>
+
+        <div th:if="${reserva.estado.name() == 'PENDIENTE' and pago == null}">
+            <a class="btn btn-primary" th:href="@{/reservas/{id}/pago(id=${reserva.id})}">Pagar ahora</a>
+        </div>
+        <div th:if="${pago != null}" class="mt-3">
+            <p class="small text-muted">
+                Pago registrado: <span th:text="${pago.metodo}">YAPE</span> &mdash;
+                referencia <span th:text="${pago.referencia}">000000</span> &mdash;
+                estado <span th:text="${pago.estado}">PENDIENTE</span>
+            </p>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

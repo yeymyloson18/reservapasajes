@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Viaje - Panel ADMIN - Pasajes VRAEM</title>
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: nav}"></nav>
+
+    <main class="container" style="max-width: 560px;">
+        <h1 class="h3 mb-4" th:text="${modoEdicion} ? 'Editar viaje' : 'Nuevo viaje'">Nuevo viaje</h1>
+
+        <div th:if="${errorGeneral}" class="alert alert-danger" th:text="${errorGeneral}"></div>
+
+        <form th:action="${modoEdicion} ? @{/admin/viajes/{id}(id=${viajeId})} : @{/admin/viajes}"
+              th:object="${viajeForm}" method="post">
+            <div class="row g-3">
+                <div class="col-6">
+                    <label class="form-label" for="origen">Origen</label>
+                    <input type="text" class="form-control" id="origen" th:field="*{origen}" />
+                    <div class="text-danger small" th:if="${#fields.hasErrors('origen')}" th:errors="*{origen}"></div>
+                </div>
+                <div class="col-6">
+                    <label class="form-label" for="destino">Destino</label>
+                    <input type="text" class="form-control" id="destino" th:field="*{destino}" />
+                    <div class="text-danger small" th:if="${#fields.hasErrors('destino')}" th:errors="*{destino}"></div>
+                </div>
+                <div class="col-6">
+                    <label class="form-label" for="fecha">Fecha</label>
+                    <input type="date" class="form-control" id="fecha" th:field="*{fecha}" />
+                    <div class="text-danger small" th:if="${#fields.hasErrors('fecha')}" th:errors="*{fecha}"></div>
+                </div>
+                <div class="col-6">
+                    <label class="form-label" for="hora">Hora</label>
+                    <input type="time" class="form-control" id="hora" th:field="*{hora}" />
+                    <div class="text-danger small" th:if="${#fields.hasErrors('hora')}" th:errors="*{hora}"></div>
+                </div>
+                <div class="col-6">
+                    <label class="form-label" for="placaCamioneta">Placa de la camioneta</label>
+                    <input type="text" class="form-control" id="placaCamioneta" th:field="*{placaCamioneta}" />
+                    <div class="text-danger small" th:if="${#fields.hasErrors('placaCamioneta')}" th:errors="*{placaCamioneta}"></div>
+                </div>
+                <div class="col-6">
+                    <label class="form-label" for="rutaCamioneta">Ruta de la camioneta</label>
+                    <input type="text" class="form-control" id="rutaCamioneta" th:field="*{rutaCamioneta}"
+                           placeholder="Ej: Ayacucho - Kimbiri" />
+                </div>
+                <div class="col-6">
+                    <label class="form-label" for="precio">Precio (S/)</label>
+                    <input type="number" step="0.01" class="form-control" id="precio" th:field="*{precio}" />
+                    <div class="text-danger small" th:if="${#fields.hasErrors('precio')}" th:errors="*{precio}"></div>
+                </div>
+                <div class="col-6">
+                    <label class="form-label" for="numeroAsientos">Numero de asientos</label>
+                    <input type="number" class="form-control" id="numeroAsientos" th:field="*{numeroAsientos}" />
+                    <div class="text-danger small" th:if="${#fields.hasErrors('numeroAsientos')}" th:errors="*{numeroAsientos}"></div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-4">
+                <span th:text="${modoEdicion} ? 'Guardar cambios' : 'Crear viaje'">Crear viaje</span>
+            </button>
+        </form>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

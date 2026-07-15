@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Viajes disponibles - Pasajes VRAEM</title>
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: nav}"></nav>
+
+    <main class="container">
+        <h1 class="h3 mb-4">Viajes disponibles</h1>
+
+        <div th:if="${#lists.isEmpty(viajes)}" class="alert alert-secondary">
+            No hay viajes disponibles por el momento.
+        </div>
+
+        <div class="row g-3">
+            <div class="col-12 col-md-6 col-lg-4" th:each="viaje : ${viajes}">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="h5 card-title" th:text="${viaje.origen + ' &rarr; ' + viaje.destino}">Ruta</h2>
+                        <p class="card-text mb-1">
+                            <strong>Fecha:</strong> <span th:text="${viaje.fecha}">2026-01-01</span>
+                            &nbsp;<strong>Hora:</strong> <span th:text="${viaje.hora}">08:00</span>
+                        </p>
+                        <p class="card-text mb-3">
+                            <strong>Precio:</strong> S/ <span th:text="${viaje.precio}">0.00</span>
+                        </p>
+                        <a class="btn btn-primary" th:href="@{/viajes/{id}(id=${viaje.id})}">Ver asientos</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Detalle de viaje - Pasajes VRAEM</title>
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: nav}"></nav>
+
+    <main class="container" style="max-width: 720px;">
+        <h1 class="h3 mb-1" th:text="${viaje.origen + ' &rarr; ' + viaje.destino}">Ruta</h1>
+        <p class="text-muted mb-4">
+            <span th:text="${viaje.fecha}">2026-01-01</span> &middot;
+            <span th:text="${viaje.hora}">08:00</span> &middot;
+            S/ <span th:text="${viaje.precio}">0.00</span> por asiento
+        </p>
+
+        <div th:if="${errorReserva}" class="alert alert-danger" th:text="${errorReserva}"></div>
+
+        <h2 class="h5 mb-3">Mapa de asientos</h2>
+        <p class="small text-muted">
+            <span class="badge bg-success">Libre</span>
+            <span class="badge bg-secondary">Ocupado</span>
+        </p>
+
+        <form th:action="@{/viajes/{id}/reservas(id=${viaje.id})}" th:object="${reservaForm}" method="post">
+            <div class="row row-cols-3 row-cols-sm-4 row-cols-md-5 g-2 mb-4">
+                <div class="col" th:each="asiento, iter : ${asientos}">
+                    <input type="hidden" th:field="*{asientos[__${iter.index}__].asientoId}" />
+
+                    <div class="form-check border rounded p-2 text-center"
+                         th:classappend="${asiento.estado.name() == 'LIBRE'} ? 'border-success' : 'border-secondary bg-light'">
+                        <input class="form-check-input asiento-checkbox" type="checkbox"
+                               th:field="*{asientos[__${iter.index}__].seleccionado}"
+                               th:disabled="${asiento.estado.name() != 'LIBRE'}"
+                               th:attr="onclick=|toggleDatosPasajero(${iter.index})|" />
+                        <label class="form-check-label d-block" th:for="${'asientos' + iter.index + '.seleccionado'}"
+                               th:text="${asiento.numero}">1</label>
+                        <span class="badge" th:classappend="${asiento.estado.name() == 'LIBRE'} ? 'bg-success' : 'bg-secondary'"
+                              th:text="${asiento.estado.name() == 'LIBRE' ? 'Libre' : 'Ocupado'}">Libre</span>
+                    </div>
+
+                    <div class="mt-1 d-none" th:id="${'datos-pasajero-' + iter.index}">
+                        <input type="text" class="form-control form-control-sm mb-1" placeholder="Nombre del pasajero"
+                               th:field="*{asientos[__${iter.index}__].nombrePasajero}" />
+                        <input type="text" class="form-control form-control-sm" placeholder="DNI (8 digitos)"
+                               maxlength="8" th:field="*{asientos[__${iter.index}__].dniPasajero}" />
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Reservar asientos seleccionados</button>
+        </form>
+    </main>
+
+    <script th:inline="javascript">
+        function toggleDatosPasajero(index) {
+            var checkbox = document.querySelectorAll('.asiento-checkbox')[index];
+            var datos = document.getElementById('datos-pasajero-' + index);
+            datos.classList.toggle('d-none', !checkbox.checked);
+        }
+    </script>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

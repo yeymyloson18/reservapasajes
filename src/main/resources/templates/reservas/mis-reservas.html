@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Mis reservas - Pasajes VRAEM</title>
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: nav}"></nav>
+
+    <main class="container">
+        <h1 class="h3 mb-4">Mis reservas</h1>
+
+        <div th:if="${#lists.isEmpty(reservas)}" class="alert alert-secondary">
+            Todavia no tienes reservas. <a th:href="@{/viajes}">Ver viajes disponibles</a>.
+        </div>
+
+        <div class="list-group">
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+               th:each="reserva : ${reservas}" th:href="@{/reservas/{id}(id=${reserva.id})}">
+                <span>
+                    <strong th:text="${reserva.viaje.origen + ' &rarr; ' + reserva.viaje.destino}">Ruta</strong>
+                    &mdash; <span th:text="${reserva.viaje.fecha}">2026-01-01</span>
+                </span>
+                <span class="badge"
+                      th:classappend="${reserva.estado.name() == 'PAGADO'} ? 'bg-success' : (${reserva.estado.name() == 'PENDIENTE'} ? 'bg-warning text-dark' : 'bg-secondary')"
+                      th:text="${reserva.estado}">PENDIENTE</span>
+            </a>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

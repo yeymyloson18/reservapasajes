@@ -29,10 +29,10 @@ description: "Task list for Reserva de Pasajes de Bus VRAEM"
 
 **Purpose**: Inicialización del proyecto Spring Boot
 
-- [ ] T001 Crear proyecto Maven Spring Boot en la raíz del repositorio (`pom.xml`) con dependencias: spring-boot-starter-web, spring-boot-starter-data-jpa, spring-boot-starter-security, spring-boot-starter-thymeleaf, spring-boot-starter-test, mysql-connector-j, org.webjars:bootstrap:5.x
-- [ ] T002 Configurar `src/main/resources/application.properties` (conexión MySQL, dialecto Hibernate, puerto, `spring.jpa.hibernate.ddl-auto`)
-- [ ] T003 [P] Crear la estructura de paquetes vacía por módulo: `auth`, `viajes`, `reservas`, `pagos`, `admin`, `security` (cada uno con subpaquetes `controller`, `service`, `repository`, `model` donde aplique) bajo `src/main/java/pe/vraem/pasajes/`
-- [ ] T004 [P] Crear layout base Thymeleaf responsive mobile-first con Bootstrap 5 (navbar, contenedor, footer) en `src/main/resources/templates/layout.html`
+- [X] T001 Crear proyecto Maven Spring Boot en la raíz del repositorio (`pom.xml`) con dependencias: spring-boot-starter-web, spring-boot-starter-data-jpa, spring-boot-starter-security, spring-boot-starter-thymeleaf, spring-boot-starter-test, mysql-connector-j, org.webjars:bootstrap:5.x
+- [X] T002 Configurar `src/main/resources/application.properties` (conexión MySQL, dialecto Hibernate, puerto, `spring.jpa.hibernate.ddl-auto`)
+- [X] T003 [P] Crear la estructura de paquetes vacía por módulo: `auth`, `viajes`, `reservas`, `pagos`, `admin`, `security` (cada uno con subpaquetes `controller`, `service`, `repository`, `model` donde aplique) bajo `src/main/java/pe/vraem/pasajes/`
+- [X] T004 [P] Crear layout base Thymeleaf responsive mobile-first con Bootstrap 5 (navbar, contenedor, footer) en `src/main/resources/templates/layout.html`
 
 **Checkpoint**: Proyecto compila y arranca (`mvn spring-boot:run`) sirviendo una página en blanco.
 
@@ -44,22 +44,22 @@ description: "Task list for Reserva de Pasajes de Bus VRAEM"
 
 **⚠️ CRITICAL**: Ninguna historia de usuario puede implementarse hasta completar esta fase
 
-- [ ] T005 [P] Crear enum `Rol` (`PASAJERO`, `ADMIN`) en `src/main/java/pe/vraem/pasajes/auth/model/Rol.java`
-- [ ] T006 [P] Crear entidad `Usuario` (dni único 8 dígitos, nombre, email único, passwordHash, rol) en `src/main/java/pe/vraem/pasajes/auth/model/Usuario.java`
-- [ ] T007 [P] Crear `UsuarioRepository` (con `findByEmail`, `existsByDni`) en `src/main/java/pe/vraem/pasajes/auth/repository/UsuarioRepository.java`
-- [ ] T008 [P] Crear entidad `Camioneta` (placa única, ruta) en `src/main/java/pe/vraem/pasajes/viajes/model/Camioneta.java`
-- [ ] T009 [P] Crear enum `EstadoAsiento` (`LIBRE`, `RESERVADO`, `PAGADO`) en `src/main/java/pe/vraem/pasajes/viajes/model/EstadoAsiento.java`
-- [ ] T010 [P] Crear entidad `Viaje` (origen, destino, fecha, hora, camioneta, precio, numeroAsientos) en `src/main/java/pe/vraem/pasajes/viajes/model/Viaje.java`
-- [ ] T011 [P] Crear entidad `Asiento` (viaje, numero, estado, reserva_id nullable, nombrePasajero nullable, dniPasajero nullable) en `src/main/java/pe/vraem/pasajes/viajes/model/Asiento.java`
-- [ ] T012 [P] Crear `CamionetaRepository`, `ViajeRepository` y `AsientoRepository` (con método de bloqueo pesimista `@Lock(PESSIMISTIC_WRITE)` para releer asientos por id) en `src/main/java/pe/vraem/pasajes/viajes/repository/`
-- [ ] T013 [P] Crear enum `EstadoReserva` (`PENDIENTE`, `PAGADO`, `EXPIRADA`) en `src/main/java/pe/vraem/pasajes/reservas/model/EstadoReserva.java`
-- [ ] T014 [P] Crear entidad `Reserva` (usuario, viaje, montoTotal, estado, fechaCreacion, codigoReserva único) en `src/main/java/pe/vraem/pasajes/reservas/model/Reserva.java`
-- [ ] T015 [P] Crear `ReservaRepository` (con `findByEstadoAndFechaCreacionBefore` para expiración) en `src/main/java/pe/vraem/pasajes/reservas/repository/ReservaRepository.java`
-- [ ] T016 [P] Crear enums `MetodoPago` (`YAPE`, `PLIN`) y `EstadoPago` (`PENDIENTE`, `CONFIRMADO`) en `src/main/java/pe/vraem/pasajes/pagos/model/`
-- [ ] T017 [P] Crear entidad `Pago` (reserva único, metodo, estado, referencia) en `src/main/java/pe/vraem/pasajes/pagos/model/Pago.java`
-- [ ] T018 [P] Crear `PagoRepository` en `src/main/java/pe/vraem/pasajes/pagos/repository/PagoRepository.java`
-- [ ] T019 Configurar Spring Security (`UserDetailsService` sobre `UsuarioRepository`, bean `BCryptPasswordEncoder`, reglas de acceso: `/admin/**` solo `ADMIN`, form login/logout) en `src/main/java/pe/vraem/pasajes/security/SecurityConfig.java`
-- [ ] T020 Habilitar tareas programadas (`@EnableScheduling`) en `src/main/java/pe/vraem/pasajes/PasajesVraemApplication.java`
+- [X] T005 [P] Crear enum `Rol` (`PASAJERO`, `ADMIN`) en `src/main/java/pe/vraem/pasajes/auth/model/Rol.java`
+- [X] T006 [P] Crear entidad `Usuario` (dni único 8 dígitos, nombre, email único, passwordHash, rol) en `src/main/java/pe/vraem/pasajes/auth/model/Usuario.java`
+- [X] T007 [P] Crear `UsuarioRepository` (con `findByEmail`, `existsByDni`) en `src/main/java/pe/vraem/pasajes/auth/repository/UsuarioRepository.java`
+- [X] T008 [P] Crear entidad `Camioneta` (placa única, ruta) en `src/main/java/pe/vraem/pasajes/viajes/model/Camioneta.java`
+- [X] T009 [P] Crear enum `EstadoAsiento` (`LIBRE`, `RESERVADO`, `PAGADO`) en `src/main/java/pe/vraem/pasajes/viajes/model/EstadoAsiento.java`
+- [X] T010 [P] Crear entidad `Viaje` (origen, destino, fecha, hora, camioneta, precio, numeroAsientos) en `src/main/java/pe/vraem/pasajes/viajes/model/Viaje.java`
+- [X] T011 [P] Crear entidad `Asiento` (viaje, numero, estado, reserva_id nullable, nombrePasajero nullable, dniPasajero nullable) en `src/main/java/pe/vraem/pasajes/viajes/model/Asiento.java`
+- [X] T012 [P] Crear `CamionetaRepository`, `ViajeRepository` y `AsientoRepository` (con método de bloqueo pesimista `@Lock(PESSIMISTIC_WRITE)` para releer asientos por id) en `src/main/java/pe/vraem/pasajes/viajes/repository/`
+- [X] T013 [P] Crear enum `EstadoReserva` (`PENDIENTE`, `PAGADO`, `EXPIRADA`) en `src/main/java/pe/vraem/pasajes/reservas/model/EstadoReserva.java`
+- [X] T014 [P] Crear entidad `Reserva` (usuario, viaje, montoTotal, estado, fechaCreacion, codigoReserva único) en `src/main/java/pe/vraem/pasajes/reservas/model/Reserva.java`
+- [X] T015 [P] Crear `ReservaRepository` (con `findByEstadoAndFechaCreacionBefore` para expiración) en `src/main/java/pe/vraem/pasajes/reservas/repository/ReservaRepository.java`
+- [X] T016 [P] Crear enums `MetodoPago` (`YAPE`, `PLIN`) y `EstadoPago` (`PENDIENTE`, `CONFIRMADO`) en `src/main/java/pe/vraem/pasajes/pagos/model/`
+- [X] T017 [P] Crear entidad `Pago` (reserva único, metodo, estado, referencia) en `src/main/java/pe/vraem/pasajes/pagos/model/Pago.java`
+- [X] T018 [P] Crear `PagoRepository` en `src/main/java/pe/vraem/pasajes/pagos/repository/PagoRepository.java`
+- [X] T019 Configurar Spring Security (`UserDetailsService` sobre `UsuarioRepository`, bean `BCryptPasswordEncoder`, reglas de acceso: `/admin/**` solo `ADMIN`, form login/logout) en `src/main/java/pe/vraem/pasajes/security/SecurityConfig.java`
+- [X] T020 Habilitar tareas programadas (`@EnableScheduling`) en `src/main/java/pe/vraem/pasajes/PasajesVraemApplication.java`
 
 **Checkpoint**: Esquema de base de datos generado, seguridad base configurada. Las historias de usuario pueden comenzar.
 
@@ -73,25 +73,25 @@ description: "Task list for Reserva de Pasajes de Bus VRAEM"
 
 ### Tests for User Story 1
 
-- [ ] T021 [P] [US1] Unit test `UsuarioService` (registro valida DNI/email únicos y formato, hash BCrypt de contraseña, login) en `src/test/java/pe/vraem/pasajes/auth/UsuarioServiceTest.java`
-- [ ] T022 [P] [US1] Integration test flujo registro + login (`AuthController`) en `src/test/java/pe/vraem/pasajes/auth/AuthControllerIT.java`
-- [ ] T023 [P] [US1] Unit test `ReservaService` (cálculo de monto total, bloqueo pesimista de asientos, rechazo si algún asiento ya no está `LIBRE`, generación de código único, y `liberarReservasExpiradas()`: una reserva `PENDIENTE` con `fechaCreacion` de más de 30 min pasa a `EXPIRADA` y sus asientos vuelven a `LIBRE`) en `src/test/java/pe/vraem/pasajes/reservas/ReservaServiceTest.java`
-- [ ] T024 [P] [US1] Integration test `POST /viajes/{id}/reservas` y `GET /reservas/{id}` (creación de reserva happy path, caso de dos solicitudes concurrentes sobre el mismo asiento, y verificación de que un usuario autenticado distinto del propietario y sin rol ADMIN recibe acceso denegado al `GET /reservas/{id}`, FR-019) en `src/test/java/pe/vraem/pasajes/reservas/ReservaControllerIT.java`
-- [ ] T025 [P] [US1] Unit test `PagoService` (registrar pago pendiente; confirmar pago transiciona Reserva y Asientos a `PAGADO`) en `src/test/java/pe/vraem/pasajes/pagos/PagoServiceTest.java`
-- [ ] T026 [P] [US1] Integration test flujo de pago (`POST /reservas/{id}/pago` y `POST /admin/reservas/{id}/confirmar-pago`), verificando además que tras la confirmación `GET /reservas/{id}` muestra el boleto completo (código de reserva único, ruta, fecha, hora, asientos y datos de los pasajeros, FR-013) en `src/test/java/pe/vraem/pasajes/pagos/PagoControllerIT.java`
+- [X] T021 [P] [US1] Unit test `UsuarioService` (registro valida DNI/email únicos y formato, hash BCrypt de contraseña, login) en `src/test/java/pe/vraem/pasajes/auth/UsuarioServiceTest.java`
+- [X] T022 [P] [US1] Integration test flujo registro + login (`AuthController`) en `src/test/java/pe/vraem/pasajes/auth/AuthControllerIT.java`
+- [X] T023 [P] [US1] Unit test `ReservaService` (cálculo de monto total, bloqueo pesimista de asientos, rechazo si algún asiento ya no está `LIBRE`, generación de código único, y `liberarReservasExpiradas()`: una reserva `PENDIENTE` con `fechaCreacion` de más de 30 min pasa a `EXPIRADA` y sus asientos vuelven a `LIBRE`) en `src/test/java/pe/vraem/pasajes/reservas/ReservaServiceTest.java`
+- [X] T024 [P] [US1] Integration test `POST /viajes/{id}/reservas` y `GET /reservas/{id}` (creación de reserva happy path, caso de dos solicitudes concurrentes sobre el mismo asiento, y verificación de que un usuario autenticado distinto del propietario y sin rol ADMIN recibe acceso denegado al `GET /reservas/{id}`, FR-019) en `src/test/java/pe/vraem/pasajes/reservas/ReservaControllerIT.java`
+- [X] T025 [P] [US1] Unit test `PagoService` (registrar pago pendiente; confirmar pago transiciona Reserva y Asientos a `PAGADO`) en `src/test/java/pe/vraem/pasajes/pagos/PagoServiceTest.java`
+- [X] T026 [P] [US1] Integration test flujo de pago (`POST /reservas/{id}/pago` y `POST /admin/reservas/{id}/confirmar-pago`), verificando además que tras la confirmación `GET /reservas/{id}` muestra el boleto completo (código de reserva único, ruta, fecha, hora, asientos y datos de los pasajeros, FR-013) en `src/test/java/pe/vraem/pasajes/pagos/PagoControllerIT.java`
 
 ### Implementation for User Story 1
 
-- [ ] T027 [US1] Implementar `UsuarioService` (registro con validación de unicidad DNI/email, hash BCrypt, consulta para login) en `src/main/java/pe/vraem/pasajes/auth/service/UsuarioService.java`
-- [ ] T028 [US1] Implementar `RegistroController` (`GET`/`POST /registro`) en `src/main/java/pe/vraem/pasajes/auth/controller/RegistroController.java` + vista `src/main/resources/templates/auth/registro.html`
-- [ ] T029 [US1] Implementar `LoginController` (`GET /login`) en `src/main/java/pe/vraem/pasajes/auth/controller/LoginController.java` + vista `src/main/resources/templates/auth/login.html` (POST /login y /logout gestionados por Spring Security)
-- [ ] T030 [P] [US1] Implementar `ViajeService.listarDisponibles()` y `obtenerDetalle(id)` en `src/main/java/pe/vraem/pasajes/viajes/service/ViajeService.java`
-- [ ] T031 [US1] Implementar `ViajeController` (`GET /viajes`, `GET /viajes/{id}`) en `src/main/java/pe/vraem/pasajes/viajes/controller/ViajeController.java` + vistas `src/main/resources/templates/viajes/lista.html` y `src/main/resources/templates/viajes/detalle.html` (mapa de asientos libre/ocupado)
-- [ ] T032 [US1] Implementar `ReservaService.crearReserva(...)` (bloqueo pesimista de asientos, validación de datos de pasajero por asiento, cálculo de monto, generación de código de reserva único) en `src/main/java/pe/vraem/pasajes/reservas/service/ReservaService.java`
-- [ ] T033 [US1] Implementar `ReservaService.liberarReservasExpiradas()` con `@Scheduled(fixedRate = ...)` (cada 1 minuto, libera reservas `PENDIENTE` con más de 30 min) en `src/main/java/pe/vraem/pasajes/reservas/service/ReservaService.java`
-- [ ] T034 [US1] Implementar `ReservaController` (`POST /viajes/{id}/reservas`, `GET /reservas/{id}` restringido a propietario/ADMIN) en `src/main/java/pe/vraem/pasajes/reservas/controller/ReservaController.java` + vistas `src/main/resources/templates/reservas/seleccion-asientos.html`, `src/main/resources/templates/reservas/detalle.html`, `src/main/resources/templates/reservas/boleto.html`
-- [ ] T035 [US1] Implementar `PagoService.registrarPago(...)` y `confirmarPago(...)` en `src/main/java/pe/vraem/pasajes/pagos/service/PagoService.java`
-- [ ] T036 [US1] Implementar `PagoController` (`GET`/`POST /reservas/{id}/pago`, `POST /admin/reservas/{id}/confirmar-pago` restringido a ADMIN) en `src/main/java/pe/vraem/pasajes/pagos/controller/PagoController.java` + vista `src/main/resources/templates/pagos/formulario.html`
+- [X] T027 [US1] Implementar `UsuarioService` (registro con validación de unicidad DNI/email, hash BCrypt, consulta para login) en `src/main/java/pe/vraem/pasajes/auth/service/UsuarioService.java`
+- [X] T028 [US1] Implementar `RegistroController` (`GET`/`POST /registro`) en `src/main/java/pe/vraem/pasajes/auth/controller/RegistroController.java` + vista `src/main/resources/templates/auth/registro.html`
+- [X] T029 [US1] Implementar `LoginController` (`GET /login`) en `src/main/java/pe/vraem/pasajes/auth/controller/LoginController.java` + vista `src/main/resources/templates/auth/login.html` (POST /login y /logout gestionados por Spring Security)
+- [X] T030 [P] [US1] Implementar `ViajeService.listarDisponibles()` y `obtenerDetalle(id)` en `src/main/java/pe/vraem/pasajes/viajes/service/ViajeService.java`
+- [X] T031 [US1] Implementar `ViajeController` (`GET /viajes`, `GET /viajes/{id}`) en `src/main/java/pe/vraem/pasajes/viajes/controller/ViajeController.java` + vistas `src/main/resources/templates/viajes/lista.html` y `src/main/resources/templates/viajes/detalle.html` (mapa de asientos libre/ocupado; el formulario de selección de asientos vive en esta misma vista en lugar de una plantilla separada, ver Notes)
+- [X] T032 [US1] Implementar `ReservaService.crearReserva(...)` (bloqueo pesimista de asientos, validación de datos de pasajero por asiento, cálculo de monto, generación de código de reserva único) en `src/main/java/pe/vraem/pasajes/reservas/service/ReservaService.java`
+- [X] T033 [US1] Implementar `ReservaService.liberarReservasExpiradas()` con `@Scheduled(fixedRate = ...)` (cada 1 minuto, libera reservas `PENDIENTE` con más de 30 min) en `src/main/java/pe/vraem/pasajes/reservas/service/ReservaService.java`
+- [X] T034 [US1] Implementar `ReservaController` (`POST /viajes/{id}/reservas`, `GET /reservas/{id}` restringido a propietario/ADMIN) en `src/main/java/pe/vraem/pasajes/reservas/controller/ReservaController.java` + vista `src/main/resources/templates/reservas/detalle.html` (sirve también como boleto cuando la reserva está `PAGADO`)
+- [X] T035 [US1] Implementar `PagoService.registrarPago(...)` y `confirmarPago(...)` en `src/main/java/pe/vraem/pasajes/pagos/service/PagoService.java`
+- [X] T036 [US1] Implementar `PagoController` (`GET`/`POST /reservas/{id}/pago`, `POST /admin/reservas/{id}/confirmar-pago` restringido a ADMIN) en `src/main/java/pe/vraem/pasajes/pagos/controller/PagoController.java` + vista `src/main/resources/templates/pagos/formulario.html`
 
 **Checkpoint**: El flujo end-to-end login → reservar → pagar → ver boleto funciona de forma independiente y verificable (SC-001, SC-002, SC-003, SC-006).
 
@@ -105,14 +105,14 @@ description: "Task list for Reserva de Pasajes de Bus VRAEM"
 
 ### Tests for User Story 2
 
-- [ ] T037 [P] [US2] Unit test `ViajeService` (crear viaje genera N asientos `LIBRE`; editar rechaza reducir asientos por debajo de los `RESERVADO`/`PAGADO`; eliminar rechaza si existen reservas `PAGADO`) en `src/test/java/pe/vraem/pasajes/viajes/ViajeServiceTest.java`
-- [ ] T038 [P] [US2] Integration test `AdminViajeController` (crear, editar y eliminar viaje happy path, y acceso denegado a no-ADMIN) en `src/test/java/pe/vraem/pasajes/viajes/AdminViajeControllerIT.java`
+- [X] T037 [P] [US2] Unit test `ViajeService` (crear viaje genera N asientos `LIBRE`; editar rechaza reducir asientos por debajo de los `RESERVADO`/`PAGADO`; eliminar rechaza si existen reservas `PAGADO`) en `src/test/java/pe/vraem/pasajes/viajes/ViajeServiceTest.java`
+- [X] T038 [P] [US2] Integration test `AdminViajeController` (crear, editar y eliminar viaje happy path, y acceso denegado a no-ADMIN) en `src/test/java/pe/vraem/pasajes/viajes/AdminViajeControllerIT.java`
 
 ### Implementation for User Story 2
 
-- [ ] T039 [US2] Implementar `ViajeService.crearViaje(...)` (genera automáticamente los `Asiento` según `numeroAsientos`), `editarViaje(...)` (rechaza reducir asientos por debajo de los ocupados, FR-015) y `eliminarViaje(...)` (rechaza si hay reservas pagadas, FR-016) en `src/main/java/pe/vraem/pasajes/viajes/service/ViajeService.java`
-- [ ] T040 [US2] Implementar selección/alta de `Camioneta` dentro del formulario de viaje (dropdown de camionetas existentes + alta rápida por placa/ruta) en `ViajeService.obtenerOCrearCamioneta(...)` en `src/main/java/pe/vraem/pasajes/viajes/service/ViajeService.java`
-- [ ] T041 [US2] Implementar `AdminViajeController` (`GET /admin/viajes/nuevo`, `POST /admin/viajes`, `GET /admin/viajes/{id}/editar`, `POST /admin/viajes/{id}`, `POST /admin/viajes/{id}/eliminar`, restringido a ADMIN) en `src/main/java/pe/vraem/pasajes/viajes/controller/AdminViajeController.java` + vista `src/main/resources/templates/viajes/admin-form.html`
+- [X] T039 [US2] Implementar `ViajeService.crearViaje(...)` (genera automáticamente los `Asiento` según `numeroAsientos`), `editarViaje(...)` (rechaza reducir asientos por debajo de los ocupados, FR-015) y `eliminarViaje(...)` (rechaza si hay reservas pagadas, FR-016) en `src/main/java/pe/vraem/pasajes/viajes/service/ViajeService.java`
+- [X] T040 [US2] Implementar selección/alta de `Camioneta` dentro del formulario de viaje (dropdown de camionetas existentes + alta rápida por placa/ruta) en `ViajeService.obtenerOCrearCamioneta(...)` en `src/main/java/pe/vraem/pasajes/viajes/service/ViajeService.java`
+- [X] T041 [US2] Implementar `AdminViajeController` (`GET /admin/viajes/nuevo`, `POST /admin/viajes`, `GET /admin/viajes/{id}/editar`, `POST /admin/viajes/{id}`, `POST /admin/viajes/{id}/eliminar`, restringido a ADMIN) en `src/main/java/pe/vraem/pasajes/viajes/controller/AdminViajeController.java` + vista `src/main/resources/templates/viajes/admin-form.html`
 
 **Checkpoint**: El ADMIN puede publicar y mantener viajes de forma independiente; US1 sigue funcionando (SC-004).
 
@@ -126,15 +126,15 @@ description: "Task list for Reserva de Pasajes de Bus VRAEM"
 
 ### Tests for User Story 3
 
-- [ ] T042 [P] [US3] Integration test `GET /admin/reservas` (lista reservas en estados pendiente/pagado/expirada; acceso denegado a no-ADMIN) en `src/test/java/pe/vraem/pasajes/reservas/AdminReservaControllerIT.java`
-- [ ] T043 [P] [US3] Unit test `AdminService.obtenerResumen()` (conteo de viajes activos y reservas pendientes) en `src/test/java/pe/vraem/pasajes/admin/AdminServiceTest.java`
-- [ ] T044 [P] [US3] Integration test acceso a `/admin` (ADMIN permitido, PASAJERO denegado) en `src/test/java/pe/vraem/pasajes/admin/AdminControllerIT.java`
+- [X] T042 [P] [US3] Integration test `GET /admin/reservas` (lista reservas en estados pendiente/pagado/expirada; acceso denegado a no-ADMIN) en `src/test/java/pe/vraem/pasajes/reservas/AdminReservaControllerIT.java`
+- [X] T043 [P] [US3] Unit test `AdminService.obtenerResumen()` (conteo de viajes activos y reservas pendientes) en `src/test/java/pe/vraem/pasajes/admin/AdminServiceTest.java`
+- [X] T044 [P] [US3] Integration test acceso a `/admin` (ADMIN permitido, PASAJERO denegado) en `src/test/java/pe/vraem/pasajes/admin/AdminControllerIT.java`
 
 ### Implementation for User Story 3
 
-- [ ] T045 [US3] Implementar `AdminReservaController` (`GET /admin/reservas`, restringido a ADMIN) en `src/main/java/pe/vraem/pasajes/reservas/controller/AdminReservaController.java` + vista `src/main/resources/templates/admin/listado-reservas.html`
-- [ ] T046 [US3] Implementar `AdminService.obtenerResumen()` (conteo de viajes activos y reservas pendientes) en `src/main/java/pe/vraem/pasajes/admin/service/AdminService.java`
-- [ ] T047 [US3] Implementar `AdminHomeController` (`GET /admin`, restringido a ADMIN) en `src/main/java/pe/vraem/pasajes/admin/controller/AdminHomeController.java` + vista `src/main/resources/templates/admin/panel.html`
+- [X] T045 [US3] Implementar `AdminReservaController` (`GET /admin/reservas`, restringido a ADMIN) en `src/main/java/pe/vraem/pasajes/reservas/controller/AdminReservaController.java` + vista `src/main/resources/templates/admin/listado-reservas.html`
+- [X] T046 [US3] Implementar `AdminService.obtenerResumen()` (conteo de viajes activos y reservas pendientes) en `src/main/java/pe/vraem/pasajes/admin/service/AdminService.java`
+- [X] T047 [US3] Implementar `AdminHomeController` (`GET /admin`, restringido a ADMIN) en `src/main/java/pe/vraem/pasajes/admin/controller/AdminHomeController.java` + vista `src/main/resources/templates/admin/panel.html`
 
 **Checkpoint**: Todas las historias de usuario (US1, US2, US3) funcionan de forma independiente (SC-005).
 
@@ -144,9 +144,9 @@ description: "Task list for Reserva de Pasajes de Bus VRAEM"
 
 **Purpose**: Mejoras que afectan a múltiples historias
 
-- [ ] T048 [P] Ajustar navegación compartida (enlaces a `/admin` visibles solo para ADMIN, enlace a "Mis reservas" para PASAJERO) en `src/main/resources/templates/layout.html`
-- [ ] T049 [P] Páginas de error simples (403/404/500) responsive con Bootstrap 5 en `src/main/resources/templates/error/`
-- [ ] T050 Ejecutar manualmente los 4 escenarios de `specs/001-reserva-pasajes-bus/quickstart.md` y corregir los hallazgos
+- [X] T048 [P] Ajustar navegación compartida (enlaces a `/admin` visibles solo para ADMIN, enlace a "Mis reservas" para PASAJERO) en `src/main/resources/templates/layout.html`. Requirió además una nueva ruta `GET /reservas` ("mis reservas") en `ReservaController`/`ReservaService.listarPorUsuario(...)` + vista `reservas/mis-reservas.html` para que el enlace tenga destino.
+- [X] T049 [P] Páginas de error simples (403/404/500) responsive con Bootstrap 5 en `src/main/resources/templates/error/`
+- [X] T050 Ejecutar manualmente los 4 escenarios de `specs/001-reserva-pasajes-bus/quickstart.md` contra MySQL real y corregir los hallazgos. Bugs encontrados y corregidos: (1) fragmento Thymeleaf `head(pageTitle)` mal declarado sobre `<th:block>` en vez de `<head>`, rompía el parseo de toda vista que lo usara; (2) `ViajeNoEncontradoException`/`ReservaNoEncontradaException` no mapeaban a 404 (devolvían 500), corregido con `@ResponseStatus(HttpStatus.NOT_FOUND)`.
 
 ---
 

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Pagar reserva - Pasajes VRAEM</title>
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: nav}"></nav>
+
+    <main class="container" style="max-width: 480px;">
+        <h1 class="h3 mb-1">Pagar reserva</h1>
+        <p class="text-muted mb-4">
+            Monto a pagar: S/ <strong th:text="${reserva.montoTotal}">0.00</strong>
+        </p>
+
+        <div th:if="${errorGeneral}" class="alert alert-danger" th:text="${errorGeneral}"></div>
+
+        <form th:action="@{/reservas/{id}/pago(id=${reserva.id})}" th:object="${pagoForm}" method="post">
+            <div class="mb-3">
+                <label class="form-label" for="metodo">Metodo de pago</label>
+                <select class="form-select" id="metodo" th:field="*{metodo}">
+                    <option value="">Selecciona...</option>
+                    <option value="YAPE">Yape</option>
+                    <option value="PLIN">Plin</option>
+                </select>
+                <div class="text-danger small" th:if="${#fields.hasErrors('metodo')}" th:errors="*{metodo}"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="referencia">Numero / codigo de operacion</label>
+                <input type="text" class="form-control" id="referencia" th:field="*{referencia}" />
+                <div class="text-danger small" th:if="${#fields.hasErrors('referencia')}" th:errors="*{referencia}"></div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Registrar pago</button>
+        </form>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

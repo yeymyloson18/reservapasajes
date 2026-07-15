@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Registro - Pasajes VRAEM</title>
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: nav}"></nav>
+
+    <main class="container" style="max-width: 480px;">
+        <h1 class="h3 mb-4">Crear cuenta</h1>
+
+        <div th:if="${errorGeneral}" class="alert alert-danger" th:text="${errorGeneral}"></div>
+
+        <form th:action="@{/registro}" th:object="${registroForm}" method="post" novalidate>
+            <div class="mb-3">
+                <label class="form-label" for="dni">DNI</label>
+                <input type="text" class="form-control" id="dni" th:field="*{dni}" maxlength="8" />
+                <div class="text-danger small" th:if="${#fields.hasErrors('dni')}" th:errors="*{dni}"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="nombre">Nombre completo</label>
+                <input type="text" class="form-control" id="nombre" th:field="*{nombre}" />
+                <div class="text-danger small" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="email">Email</label>
+                <input type="email" class="form-control" id="email" th:field="*{email}" />
+                <div class="text-danger small" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="password">Contrasena</label>
+                <input type="password" class="form-control" id="password" th:field="*{password}" />
+                <div class="text-danger small" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Registrarme</button>
+        </form>
+
+        <p class="mt-3 text-center">
+            <a th:href="@{/login}">Ya tengo cuenta, iniciar sesion</a>
+        </p>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Reservas - Panel ADMIN - Pasajes VRAEM</title>
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: nav}"></nav>
+
+    <main class="container">
+        <h1 class="h3 mb-4">Reservas</h1>
+
+        <div th:if="${errorGeneral}" class="alert alert-danger" th:text="${errorGeneral}"></div>
+
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Comprador</th>
+                        <th>Viaje</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="reserva : ${reservas}">
+                        <td th:text="${reserva.codigoReserva}">ABCD1234</td>
+                        <td th:text="${reserva.usuario.nombre}">Nombre</td>
+                        <td th:text="${reserva.viaje.origen + ' &rarr; ' + reserva.viaje.destino}">Ruta</td>
+                        <td>S/ <span th:text="${reserva.montoTotal}">0.00</span></td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${reserva.estado.name() == 'PAGADO'} ? 'bg-success' : (${reserva.estado.name() == 'PENDIENTE'} ? 'bg-warning text-dark' : 'bg-secondary')"
+                                  th:text="${reserva.estado}">PENDIENTE</span>
+                        </td>
+                        <td th:text="${reserva.fechaCreacion}">2026-01-01</td>
+                        <td>
+                            <form th:if="${reserva.estado.name() == 'PENDIENTE'}"
+                                  th:action="@{/admin/reservas/{id}/confirmar-pago(id=${reserva.id})}" method="post">
+                                <button type="submit" class="btn btn-sm btn-success">Confirmar pago</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

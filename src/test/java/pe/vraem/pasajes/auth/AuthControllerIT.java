@@ -1,0 +1,66 @@
+package pe.vraem.pasajes.auth;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import pe.vraem.pasajes.auth.model.Usuario;
+import pe.vraem.pasajes.auth.repository.UsuarioRepository;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
+class AuthControllerIT {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Test
+    void registraUnPasajeroYLuegoIniciaSesion() throws Exception {
+        mockMvc.perform(post("/registro")
+                        .param("dni", "45678912")
+                        .param("nombre", "Ana Quispe")
+                        .param("email", "ana@example.com")
+                        .param("password", "claveSegura1")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?registrado"));
+
+        Usuario creado = usuarioRepository.findByEmail("ana@example.com").orElseThrow();
+        assertThat(passwordEncoder.matches("claveSegura1", creado.getPasswordHash())).isTrue();
+
+        mockMvc.perform(formLogin().user("ana@example.com").password("claveSegura1"))
+                .andExpect(SecurityMockMvcResultMatchers.authenticated());
+    }
+
+    @Test
+    void rechazaRegistroConEmailDuplicado() throws Exception {
+        usuarioRepository.save(new Usuario("11111111", "Otro", "duplicado@example.com",
+                passwordEncoder.encode("otraClave1"), pe.vraem.pasajes.auth.model.Rol.PASAJERO));
+
+        mockMvc.perform(post("/registro")
+                        .param("dni", "22222222")
+                        .param("nombre", "Nuevo Usuario")
+                        .param("email", "duplicado@example.com")
+                        .param("password", "claveSegura1")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isOk());
+    }
+}
