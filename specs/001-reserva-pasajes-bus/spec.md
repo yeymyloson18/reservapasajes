@@ -46,7 +46,7 @@ Un administrador inicia sesión con rol ADMIN y crea, edita o elimina viajes (ru
 
 **Acceptance Scenarios**:
 
-1. **Given** un usuario con rol ADMIN autenticado, **When** crea un viaje indicando origen, destino, fecha, hora, camioneta y precio, **Then** el viaje aparece en la lista de viajes disponibles con su mapa de asientos generado según el número de asientos configurado.
+1. **Given** un usuario con rol ADMIN autenticado, **When** crea un viaje indicando origen, destino, fecha, hora, camioneta (bus) y precio, **Then** el viaje aparece en la lista de viajes disponibles con su mapa de asientos generado según el número de asientos configurado.
 2. **Given** un viaje existente sin reservas pagadas, **When** el ADMIN edita su fecha, hora o precio, **Then** los cambios se reflejan inmediatamente para los pasajeros.
 3. **Given** un usuario autenticado sin rol ADMIN, **When** intenta crear, editar o eliminar un viaje, **Then** el sistema rechaza la acción.
 4. **Given** un viaje con reservas pagadas asociadas, **When** el ADMIN intenta eliminarlo, **Then** el sistema impide la eliminación y explica el motivo.
@@ -107,7 +107,7 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 ### Key Entities
 
 - **Usuario**: Persona que usa el sistema; atributos: DNI (único, 8 dígitos, solo validado por formato), nombre, email (único), contraseña (almacenada de forma encriptada), rol (PASAJERO o ADMIN).
-- **Camioneta (vehículo)**: Unidad de transporte asignada a los viajes; atributos: identificador, placa, ruta que cubre habitualmente.
+- **Camioneta (vehículo, también referido como "bus")**: Unidad de transporte asignada a los viajes; atributos: identificador, placa, ruta que cubre habitualmente. "Bus" y "Camioneta" se usan como sinónimos en este documento; la entidad canónica es `Camioneta`.
 - **Viaje**: Salida programada entre dos puntos del recorrido Ayacucho-VRAEM; atributos: origen, destino, fecha, hora, camioneta asignada, precio por asiento, número total de asientos. Se relaciona con múltiples Asientos y puede tener múltiples Reservas.
 - **Asiento**: Unidad reservable dentro de un viaje; atributos: número, estado (libre/reservado/pagado); pertenece a un único Viaje.
 - **Reserva**: Solicitud de uno o más asientos hecha por un Usuario para un Viaje; atributos: usuario comprador, viaje, asientos elegidos (cada uno con nombre y DNI del pasajero que viajará), monto total, estado (pendiente/pagado/expirada), fecha de creación. Se relaciona con un Pago.

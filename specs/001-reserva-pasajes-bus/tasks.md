@@ -75,10 +75,10 @@ description: "Task list for Reserva de Pasajes de Bus VRAEM"
 
 - [ ] T021 [P] [US1] Unit test `UsuarioService` (registro valida DNI/email únicos y formato, hash BCrypt de contraseña, login) en `src/test/java/pe/vraem/pasajes/auth/UsuarioServiceTest.java`
 - [ ] T022 [P] [US1] Integration test flujo registro + login (`AuthController`) en `src/test/java/pe/vraem/pasajes/auth/AuthControllerIT.java`
-- [ ] T023 [P] [US1] Unit test `ReservaService` (cálculo de monto total, bloqueo pesimista de asientos, rechazo si algún asiento ya no está `LIBRE`, generación de código único) en `src/test/java/pe/vraem/pasajes/reservas/ReservaServiceTest.java`
-- [ ] T024 [P] [US1] Integration test `POST /viajes/{id}/reservas` (creación de reserva happy path y caso de dos solicitudes concurrentes sobre el mismo asiento) en `src/test/java/pe/vraem/pasajes/reservas/ReservaControllerIT.java`
+- [ ] T023 [P] [US1] Unit test `ReservaService` (cálculo de monto total, bloqueo pesimista de asientos, rechazo si algún asiento ya no está `LIBRE`, generación de código único, y `liberarReservasExpiradas()`: una reserva `PENDIENTE` con `fechaCreacion` de más de 30 min pasa a `EXPIRADA` y sus asientos vuelven a `LIBRE`) en `src/test/java/pe/vraem/pasajes/reservas/ReservaServiceTest.java`
+- [ ] T024 [P] [US1] Integration test `POST /viajes/{id}/reservas` y `GET /reservas/{id}` (creación de reserva happy path, caso de dos solicitudes concurrentes sobre el mismo asiento, y verificación de que un usuario autenticado distinto del propietario y sin rol ADMIN recibe acceso denegado al `GET /reservas/{id}`, FR-019) en `src/test/java/pe/vraem/pasajes/reservas/ReservaControllerIT.java`
 - [ ] T025 [P] [US1] Unit test `PagoService` (registrar pago pendiente; confirmar pago transiciona Reserva y Asientos a `PAGADO`) en `src/test/java/pe/vraem/pasajes/pagos/PagoServiceTest.java`
-- [ ] T026 [P] [US1] Integration test flujo de pago (`POST /reservas/{id}/pago` y `POST /admin/reservas/{id}/confirmar-pago`) en `src/test/java/pe/vraem/pasajes/pagos/PagoControllerIT.java`
+- [ ] T026 [P] [US1] Integration test flujo de pago (`POST /reservas/{id}/pago` y `POST /admin/reservas/{id}/confirmar-pago`), verificando además que tras la confirmación `GET /reservas/{id}` muestra el boleto completo (código de reserva único, ruta, fecha, hora, asientos y datos de los pasajeros, FR-013) en `src/test/java/pe/vraem/pasajes/pagos/PagoControllerIT.java`
 
 ### Implementation for User Story 1
 
