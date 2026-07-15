@@ -37,6 +37,7 @@ import pe.vraem.pasajes.viajes.model.Viaje;
 import pe.vraem.pasajes.viajes.repository.AsientoRepository;
 import pe.vraem.pasajes.viajes.repository.CamionetaRepository;
 import pe.vraem.pasajes.viajes.repository.ViajeRepository;
+import pe.vraem.pasajes.viajes.service.ViajeService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -65,11 +66,11 @@ class ReservaControllerIT {
 
     private static final AtomicInteger PLACA_SEQ = new AtomicInteger();
 
-    private Viaje crearViajeConAsientos(int numeroAsientos) {
+    private Viaje crearViajeConAsientos() {
         Camioneta camioneta = camionetaRepository.save(new Camioneta("XYZ-" + PLACA_SEQ.incrementAndGet(), "Ayacucho - Sivia"));
         Viaje viaje = viajeRepository.save(new Viaje("Ayacucho", "Sivia", LocalDate.now().plusDays(2), LocalTime.of(9, 0),
-                camioneta, new BigDecimal("40.00"), numeroAsientos, "Carlos Mamani"));
-        for (int i = 1; i <= numeroAsientos; i++) {
+                camioneta, new BigDecimal("40.00"), "Carlos Mamani"));
+        for (int i = 1; i <= ViajeService.CAPACIDAD_ASIENTOS; i++) {
             asientoRepository.save(new Asiento(viaje, i));
         }
         return viaje;
@@ -81,45 +82,35 @@ class ReservaControllerIT {
     }
 
     @Test
-    void creaReservaYRedirigeAlPago() throws Exception {
-        Viaje viaje = crearViajeConAsientos(3);
+    void creaReservaDeUnAsientoYRedirigeAlPago() throws Exception {
+        Viaje viaje = crearViajeConAsientos();
         Usuario comprador = crearPasajero("45678912", "comprador1@example.com");
-        List<Asiento> asientos = asientoRepository.findAllByViajeOrderByNumeroAsc(viaje);
-        Asiento asiento1 = asientos.get(0);
-        Asiento asiento2 = asientos.get(1);
+        Asiento asiento = asientoRepository.findAllByViajeOrderByNumeroAsc(viaje).get(0);
 
-        mockMvc.perform(post("/viajes/{id}/reservas", viaje.getId())
+        mockMvc.perform(post("/viajes/{id}/asientos/{asientoId}", viaje.getId(), asiento.getId())
                         .with(csrf())
                         .with(user(comprador.getEmail()).authorities(new SimpleGrantedAuthority("ROLE_PASAJERO")))
-                        .param("asientos[0].asientoId", asiento1.getId().toString())
-                        .param("asientos[0].seleccionado", "true")
-                        .param("asientos[0].nombrePasajero", "Ana Quispe")
-                        .param("asientos[0].dniPasajero", "45678912")
-                        .param("asientos[1].asientoId", asiento2.getId().toString())
-                        .param("asientos[1].seleccionado", "true")
-                        .param("asientos[1].nombrePasajero", "Luis Rojas")
-                        .param("asientos[1].dniPasajero", "78912345"))
+                        .param("nombrePasajero", "Ana Quispe")
+                        .param("dniPasajero", "45678912"))
                 .andExpect(status().is3xxRedirection());
 
-        Asiento asiento1Actualizado = asientoRepository.findById(asiento1.getId()).orElseThrow();
-        assertThat(asiento1Actualizado.getEstado()).isEqualTo(EstadoAsiento.RESERVADO);
-        assertThat(asiento1Actualizado.getNombrePasajero()).isEqualTo("Ana Quispe");
+        Asiento asientoActualizado = asientoRepository.findById(asiento.getId()).orElseThrow();
+        assertThat(asientoActualizado.getEstado()).isEqualTo(EstadoAsiento.RESERVADO);
+        assertThat(asientoActualizado.getNombrePasajero()).isEqualTo("Ana Quispe");
     }
 
     @Test
     void unUsuarioDistintoDelPropietarioNoPuedeVerLaReserva() throws Exception {
-        Viaje viaje = crearViajeConAsientos(1);
+        Viaje viaje = crearViajeConAsientos();
         Usuario propietario = crearPasajero("11112222", "propietario@example.com");
         Usuario otroUsuario = crearPasajero("33334444", "otro@example.com");
         Asiento asiento = asientoRepository.findAllByViajeOrderByNumeroAsc(viaje).get(0);
 
-        mockMvc.perform(post("/viajes/{id}/reservas", viaje.getId())
+        mockMvc.perform(post("/viajes/{id}/asientos/{asientoId}", viaje.getId(), asiento.getId())
                         .with(csrf())
                         .with(user(propietario.getEmail()).authorities(new SimpleGrantedAuthority("ROLE_PASAJERO")))
-                        .param("asientos[0].asientoId", asiento.getId().toString())
-                        .param("asientos[0].seleccionado", "true")
-                        .param("asientos[0].nombrePasajero", "Ana Quispe")
-                        .param("asientos[0].dniPasajero", "45678912"))
+                        .param("nombrePasajero", "Ana Quispe")
+                        .param("dniPasajero", "45678912"))
                 .andExpect(status().is3xxRedirection());
 
         Long reservaId = reservaRepository.findAllByOrderByFechaCreacionDesc().get(0).getId();
@@ -135,7 +126,7 @@ class ReservaControllerIT {
 
     @Test
     void dosSolicitudesConcurrentesSobreElMismoAsientoSoloUnaTieneExito() throws Exception {
-        Viaje viaje = crearViajeConAsientos(1);
+        Viaje viaje = crearViajeConAsientos();
         Asiento asiento = asientoRepository.findAllByViajeOrderByNumeroAsc(viaje).get(0);
         Usuario usuario1 = crearPasajero("55556666", "concurrente1@example.com");
         Usuario usuario2 = crearPasajero("77778888", "concurrente2@example.com");
@@ -172,13 +163,11 @@ class ReservaControllerIT {
             listos.countDown();
             salida.await(5, TimeUnit.SECONDS);
 
-            var resultado = mockMvc.perform(post("/viajes/{id}/reservas", viaje.getId())
+            var resultado = mockMvc.perform(post("/viajes/{id}/asientos/{asientoId}", viaje.getId(), asiento.getId())
                     .with(csrf())
                     .with(user(usuario.getEmail()).authorities(new SimpleGrantedAuthority("ROLE_PASAJERO")))
-                    .param("asientos[0].asientoId", asiento.getId().toString())
-                    .param("asientos[0].seleccionado", "true")
-                    .param("asientos[0].nombrePasajero", "Pasajero " + usuario.getDni())
-                    .param("asientos[0].dniPasajero", usuario.getDni()))
+                    .param("nombrePasajero", "Pasajero " + usuario.getDni())
+                    .param("dniPasajero", usuario.getDni()))
                     .andReturn();
 
             String location = resultado.getResponse().getRedirectedUrl();

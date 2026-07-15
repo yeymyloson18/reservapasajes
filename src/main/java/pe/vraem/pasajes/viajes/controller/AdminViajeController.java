@@ -27,6 +27,12 @@ public class AdminViajeController {
         this.viajeService = viajeService;
     }
 
+    @GetMapping
+    public String gestionar(Model model) {
+        model.addAttribute("viajes", viajeService.listarTodos());
+        return "admin/gestionar-viajes";
+    }
+
     @GetMapping("/nuevo")
     public String mostrarFormularioCreacion(Model model) {
         if (!model.containsAttribute("viajeForm")) {
@@ -38,7 +44,7 @@ public class AdminViajeController {
 
     @PostMapping
     public String crear(@Valid @ModelAttribute("viajeForm") ViajeForm form, BindingResult bindingResult,
-            Model model) {
+            Model model, RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("modoEdicion", false);
             return "viajes/admin-form";
@@ -46,9 +52,11 @@ public class AdminViajeController {
 
         Camioneta camioneta = viajeService.obtenerOCrearCamioneta(form.getPlacaCamioneta(), form.getRutaCamioneta());
         viajeService.crearViaje(form.getOrigen(), form.getDestino(), form.getFecha(), form.getHora(), camioneta,
-                form.getPrecio(), form.getNumeroAsientos(), form.getChofer());
+                form.getPrecio(), form.getChofer());
 
-        return "redirect:/viajes";
+        redirectAttributes.addFlashAttribute("exito",
+                "Viaje creado y publicado correctamente. Ya aparece en la lista de viajes disponibles.");
+        return "redirect:/admin/viajes";
     }
 
     @GetMapping("/{id}/editar")
@@ -63,7 +71,6 @@ public class AdminViajeController {
             form.setPlacaCamioneta(viaje.getCamioneta().getPlaca());
             form.setRutaCamioneta(viaje.getCamioneta().getRuta());
             form.setPrecio(viaje.getPrecio());
-            form.setNumeroAsientos(viaje.getNumeroAsientos());
             form.setChofer(viaje.getChofer());
             model.addAttribute("viajeForm", form);
         }
@@ -85,7 +92,7 @@ public class AdminViajeController {
             Camioneta camioneta = viajeService.obtenerOCrearCamioneta(form.getPlacaCamioneta(),
                     form.getRutaCamioneta());
             viajeService.editarViaje(id, form.getOrigen(), form.getDestino(), form.getFecha(), form.getHora(),
-                    camioneta, form.getPrecio(), form.getNumeroAsientos(), form.getChofer());
+                    camioneta, form.getPrecio(), form.getChofer());
         } catch (ViajeInvalidoException ex) {
             model.addAttribute("viajeId", id);
             model.addAttribute("modoEdicion", true);
@@ -93,17 +100,18 @@ public class AdminViajeController {
             return "viajes/admin-form";
         }
 
-        return "redirect:/viajes/" + id;
+        redirectAttributes.addFlashAttribute("exito", "Viaje actualizado correctamente.");
+        return "redirect:/admin/viajes";
     }
 
     @PostMapping("/{id}/eliminar")
     public String eliminar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             viajeService.eliminarViaje(id);
+            redirectAttributes.addFlashAttribute("exito", "Viaje eliminado correctamente.");
         } catch (ViajeInvalidoException ex) {
             redirectAttributes.addFlashAttribute("errorGeneral", ex.getMessage());
-            return "redirect:/viajes/" + id;
         }
-        return "redirect:/viajes";
+        return "redirect:/admin/viajes";
     }
 }

@@ -46,7 +46,8 @@ public class PagoController {
 
     @PostMapping("/reservas/{id}/pago")
     public String registrarPago(@PathVariable Long id, @Valid @ModelAttribute("pagoForm") PagoForm pagoForm,
-            BindingResult bindingResult, Authentication authentication, Model model) {
+            BindingResult bindingResult, Authentication authentication, Model model,
+            RedirectAttributes redirectAttributes) {
         Reserva reserva = obtenerReservaDelPropietario(id, authentication);
 
         if (bindingResult.hasErrors()) {
@@ -62,6 +63,8 @@ public class PagoController {
             return "pagos/formulario";
         }
 
+        redirectAttributes.addFlashAttribute("exito",
+                "Pago registrado. Un administrador lo confirmara para habilitar tu boleto.");
         return "redirect:/reservas/" + id;
     }
 
@@ -70,6 +73,7 @@ public class PagoController {
         Reserva reserva = reservaService.obtenerPorId(id);
         try {
             pagoService.confirmarPago(reserva);
+            redirectAttributes.addFlashAttribute("exito", "Pago confirmado. El boleto ya esta disponible para el pasajero.");
         } catch (PagoInvalidoException ex) {
             redirectAttributes.addFlashAttribute("errorGeneral", ex.getMessage());
         }

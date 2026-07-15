@@ -9,14 +9,18 @@
     <main class="container" style="max-width: 480px;">
         <p class="mb-2"><a th:href="@{/reservas/{id}(id=${reserva.id})}">&larr; Volver a la reserva</a></p>
 
+        <div th:replace="~{fragments/layout :: pasos(3)}"></div>
+
         <h1 class="h3 mb-1">Pagar reserva</h1>
         <p class="text-muted mb-4">
             Monto a pagar: S/ <strong th:text="${reserva.montoTotal}">0.00</strong>
         </p>
 
+        <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
         <div th:if="${errorGeneral}" class="alert alert-danger" th:text="${errorGeneral}"></div>
 
-        <form th:action="@{/reservas/{id}/pago(id=${reserva.id})}" th:object="${pagoForm}" method="post">
+        <form th:action="@{/reservas/{id}/pago(id=${reserva.id})}" th:object="${pagoForm}" method="post"
+              onsubmit="return confirm('¿Confirmas que ya realizaste el pago con los datos ingresados?')">
             <div class="mb-3">
                 <label class="form-label" for="metodo">Metodo de pago</label>
                 <select class="form-select" id="metodo" th:field="*{metodo}">

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Confirmar asiento - Pasajes VRAEM</title>
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: nav}"></nav>
+
+    <main class="container" style="max-width: 480px;">
+        <p class="mb-2"><a th:href="@{/viajes/{id}(id=${viaje.id})}">&larr; Volver al mapa de asientos</a></p>
+
+        <div th:replace="~{fragments/layout :: pasos(2)}"></div>
+
+        <h1 class="h3 mb-1">Confirmar asiento</h1>
+        <p class="text-muted mb-4">
+            <span th:text="${viaje.origen + ' &rarr; ' + viaje.destino}">Ruta</span> &middot;
+            <span th:text="${viaje.fecha}">2026-01-01</span> <span th:text="${viaje.hora}">08:00</span><br />
+            Asiento <strong th:text="${asiento.numero}">1</strong>
+            (<span th:text="${asiento.esAdelante()} ? 'Adelante' : 'Atras'">Adelante</span>) &mdash;
+            S/ <strong th:text="${viaje.precio}">0.00</strong>
+        </p>
+
+        <form th:action="@{/viajes/{id}/asientos/{asientoId}(id=${viaje.id},asientoId=${asiento.id})}"
+              th:object="${confirmarAsientoForm}" method="post"
+              th:attr="onsubmit=|return confirm('¿Deseas reservar el asiento ${asiento.numero} por S/ ${viaje.precio}?')|">
+            <div class="mb-3">
+                <label class="form-label" for="nombrePasajero">Nombre del pasajero</label>
+                <input type="text" class="form-control" id="nombrePasajero" th:field="*{nombrePasajero}" />
+                <div class="text-danger small" th:if="${#fields.hasErrors('nombrePasajero')}" th:errors="*{nombrePasajero}"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="dniPasajero">DNI del pasajero</label>
+                <input type="text" class="form-control" id="dniPasajero" th:field="*{dniPasajero}" maxlength="8" />
+                <div class="text-danger small" th:if="${#fields.hasErrors('dniPasajero')}" th:errors="*{dniPasajero}"></div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Confirmar reserva</button>
+        </form>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

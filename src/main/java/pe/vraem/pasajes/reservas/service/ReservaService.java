@@ -1,11 +1,8 @@
 package pe.vraem.pasajes.reservas.service;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -36,52 +33,39 @@ public class ReservaService {
     }
 
     /**
-     * Crea una reserva PENDIENTE para los asientos indicados, bloqueandolos con
+     * Crea una reserva PENDIENTE para el asiento indicado, bloqueandolo con
      * bloqueo pesimista para evitar que dos reservas concurrentes tomen el mismo
-     * asiento (FR-006, FR-007, FR-008, FR-010, FR-013).
+     * asiento (FR-006, FR-007, FR-008, FR-010, FR-013). Cada reserva cubre
+     * exactamente un asiento; el monto total es el precio del viaje.
      */
     @Transactional
-    public Reserva crearReserva(Viaje viaje, Usuario comprador, List<SeleccionAsiento> seleccion) {
-        if (seleccion == null || seleccion.isEmpty()) {
-            throw new SeleccionInvalidaException("Debes seleccionar al menos un asiento");
+    public Reserva crearReserva(Viaje viaje, Usuario comprador, Long asientoId, String nombrePasajero,
+            String dniPasajero) {
+        if (nombrePasajero == null || nombrePasajero.isBlank()) {
+            throw new SeleccionInvalidaException("Falta el nombre del pasajero");
         }
-        for (SeleccionAsiento s : seleccion) {
-            if (s.nombrePasajero() == null || s.nombrePasajero().isBlank()) {
-                throw new SeleccionInvalidaException("Falta el nombre del pasajero para uno de los asientos");
-            }
-            if (s.dniPasajero() == null || !s.dniPasajero().matches("\\d{8}")) {
-                throw new SeleccionInvalidaException("El DNI del pasajero debe tener 8 digitos numericos");
-            }
+        if (dniPasajero == null || !dniPasajero.matches("\\d{8}")) {
+            throw new SeleccionInvalidaException("El DNI del pasajero debe tener 8 digitos numericos");
         }
 
-        List<Long> asientoIds = seleccion.stream().map(SeleccionAsiento::asientoId).toList();
-        List<Asiento> asientosBloqueados = asientoRepository.findAllByIdForUpdate(asientoIds);
-
-        if (asientosBloqueados.size() != asientoIds.size()) {
-            throw new AsientoNoDisponibleException("Alguno de los asientos seleccionados ya no existe");
+        List<Asiento> asientosBloqueados = asientoRepository.findAllByIdForUpdate(List.of(asientoId));
+        if (asientosBloqueados.isEmpty()) {
+            throw new AsientoNoDisponibleException("El asiento seleccionado ya no existe");
         }
-        for (Asiento asiento : asientosBloqueados) {
-            if (!asiento.getViaje().getId().equals(viaje.getId())) {
-                throw new AsientoNoDisponibleException("Uno de los asientos no pertenece a este viaje");
-            }
-            if (asiento.getEstado() != EstadoAsiento.LIBRE) {
-                throw new AsientoNoDisponibleException(
-                        "El asiento " + asiento.getNumero() + " ya no esta disponible");
-            }
+        Asiento asiento = asientosBloqueados.get(0);
+        if (!asiento.getViaje().getId().equals(viaje.getId())) {
+            throw new AsientoNoDisponibleException("El asiento no pertenece a este viaje");
+        }
+        if (asiento.getEstado() != EstadoAsiento.LIBRE) {
+            throw new AsientoNoDisponibleException("El asiento " + asiento.getNumero() + " ya no esta disponible");
         }
 
-        BigDecimal montoTotal = viaje.getPrecio().multiply(BigDecimal.valueOf(asientosBloqueados.size()));
-        Reserva reserva = new Reserva(comprador, viaje, montoTotal);
+        Reserva reserva = new Reserva(comprador, viaje, viaje.getPrecio());
         reserva.asignarCodigoReserva(generarCodigoUnico());
         reserva = reservaRepository.save(reserva);
 
-        Map<Long, SeleccionAsiento> seleccionPorAsientoId = seleccion.stream()
-                .collect(Collectors.toMap(SeleccionAsiento::asientoId, s -> s));
-        for (Asiento asiento : asientosBloqueados) {
-            SeleccionAsiento datos = seleccionPorAsientoId.get(asiento.getId());
-            asiento.ocupar(reserva, datos.nombrePasajero(), datos.dniPasajero());
-        }
-        asientoRepository.saveAll(asientosBloqueados);
+        asiento.ocupar(reserva, nombrePasajero, dniPasajero);
+        asientoRepository.save(asiento);
 
         return reserva;
     }

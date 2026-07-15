@@ -51,10 +51,6 @@ public class Viaje {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
-    @Positive
-    @Column(name = "numero_asientos", nullable = false)
-    private int numeroAsientos;
-
     @NotBlank
     @Column(nullable = false, length = 150)
     private String chofer;
@@ -64,14 +60,13 @@ public class Viaje {
     }
 
     public Viaje(String origen, String destino, LocalDate fecha, LocalTime hora, Camioneta camioneta,
-            BigDecimal precio, int numeroAsientos, String chofer) {
+            BigDecimal precio, String chofer) {
         this.origen = origen;
         this.destino = destino;
         this.fecha = fecha;
         this.hora = hora;
         this.camioneta = camioneta;
         this.precio = precio;
-        this.numeroAsientos = numeroAsientos;
         this.chofer = chofer;
     }
 
@@ -125,14 +120,6 @@ public class Viaje {
 
     public void setPrecio(BigDecimal precio) {
         this.precio = precio;
-    }
-
-    public int getNumeroAsientos() {
-        return numeroAsientos;
-    }
-
-    public void setNumeroAsientos(int numeroAsientos) {
-        this.numeroAsientos = numeroAsientos;
     }
 
     public String getChofer() {

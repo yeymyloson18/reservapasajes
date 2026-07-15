@@ -41,21 +41,25 @@ Salida programada entre dos puntos del recorrido Ayacucho-VRAEM.
 | hora | time | obligatorio |
 | camioneta_id | bigint, FK → Camioneta | obligatorio |
 | precio | decimal(10,2) | obligatorio, > 0 |
-| numeroAsientos | int | obligatorio, > 0; genera automáticamente esa cantidad de `Asiento` al crear el viaje. No editable por debajo de la cantidad de asientos ya en estado `RESERVADO`/`PAGADO` (FR-015). |
 | chofer | varchar(150) | obligatorio; nombre del chofer. Campo de texto simple, sin entidad `Chofer` separada (ver Assumptions de spec.md). |
 
-**Relaciones**: 1 Viaje → N Asiento. 1 Viaje → N Reserva.
+No tiene columna `numeroAsientos`: la capacidad es fija en `ViajeService.CAPACIDAD_ASIENTOS = 4`
+(ver Assumptions de spec.md, segunda revisión). Al crear un Viaje se generan automáticamente
+sus 4 `Asiento` (números 1 a 4); no es editable.
+
+**Relaciones**: 1 Viaje → N Asiento (siempre N=4). 1 Viaje → N Reserva.
 
 ## Asiento
 
 Unidad reservable dentro de un viaje. Guarda también los datos del pasajero mientras está
-ocupado por una reserva activa (evita una tabla de unión adicional).
+ocupado por una reserva activa (evita una tabla de unión adicional). Cada Viaje tiene
+exactamente 4 asientos.
 
 | Campo | Tipo | Reglas |
 |---|---|---|
 | id | bigint, PK | autogenerado |
 | viaje_id | bigint, FK → Viaje | obligatorio |
-| numero | int | obligatorio; único junto con `viaje_id` |
+| numero | int | obligatorio; único junto con `viaje_id`; valores 1 a 4. El numero 1 va "adelante" (junto al chofer); los numeros 2-4 van juntos "atras". La posicion se deriva del numero (metodo `Asiento.esAdelante()`), no es una columna separada. |
 | estado | enum(`LIBRE`, `RESERVADO`, `PAGADO`) | obligatorio, por defecto `LIBRE` |
 | reserva_id | bigint, FK → Reserva | nulo si `estado = LIBRE`; obligatorio si `RESERVADO`/`PAGADO` |
 | nombrePasajero | varchar(150) | nulo si `estado = LIBRE` |
@@ -68,19 +72,20 @@ ocupado por una reserva activa (evita una tabla de unión adicional).
 
 ## Reserva
 
-Solicitud de uno o más asientos hecha por un Usuario para un Viaje.
+Solicitud de un asiento hecha por un Usuario para un Viaje. Cada Reserva cubre exactamente
+un Asiento; un pasajero que quiere varios asientos crea varias Reservas (una por asiento).
 
 | Campo | Tipo | Reglas |
 |---|---|---|
 | id | bigint, PK | autogenerado |
 | usuario_id | bigint, FK → Usuario | obligatorio (comprador; puede reservar para terceros) |
 | viaje_id | bigint, FK → Viaje | obligatorio |
-| montoTotal | decimal(10,2) | obligatorio; = precio del viaje × número de asientos elegidos |
+| montoTotal | decimal(10,2) | obligatorio; = precio del viaje (una reserva = un asiento) |
 | estado | enum(`PENDIENTE`, `PAGADO`, `EXPIRADA`) | obligatorio, por defecto `PENDIENTE` |
 | fechaCreacion | datetime | obligatorio, autogenerado |
 | codigoReserva | varchar(8) | único, generado al crear la reserva |
 
-**Relaciones**: 1 Reserva → N Asiento (vía `Asiento.reserva_id`). 1 Reserva → 1 Pago.
+**Relaciones**: 1 Reserva → 1 Asiento (vía `Asiento.reserva_id`). 1 Reserva → 1 Pago.
 
 **Transiciones de estado**:
 - `PENDIENTE → PAGADO`: al confirmar el ADMIN el pago asociado (FR-012).
@@ -109,8 +114,8 @@ Registro del intento de cobro de una Reserva.
 ```text
 Usuario (1) ──< Reserva (N)
 Camioneta (1) ──< Viaje (N)
-Viaje (1) ──< Asiento (N)
+Viaje (1) ──< Asiento (4, fijo)
 Viaje (1) ──< Reserva (N)
-Reserva (1) ──< Asiento (N)     [vía Asiento.reserva_id]
+Reserva (1) ── Asiento (1)      [vía Asiento.reserva_id]
 Reserva (1) ── Pago (1)
 ```

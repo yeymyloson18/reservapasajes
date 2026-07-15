@@ -25,11 +25,20 @@ Tras probar el sistema implementado, se identificaron vacíos de la spec origina
 - Q: ¿"Chofer" y "Ruta" deben ser entidades nuevas con CRUD propio en el panel ADMIN? → A: No. "Chofer" se agrega como un campo de texto simple del Viaje (sin gestión propia). "Ruta" sigue siendo el origen/destino ya existente de cada Viaje; no se crea una entidad `Ruta` separada.
 - Q: ¿Cómo se entrega la contraseña temporal al recuperar acceso, sin servidor de correo? → A: Se muestra una única vez en pantalla tras enviar el formulario de recuperación.
 
+### Session 2026-07-15 (segunda revisión — reemplaza decisiones de la revisión anterior)
+
+El usuario probó el sistema de nuevo y pidió revertir dos decisiones tomadas en la revisión anterior, además de agregar gestión visible de viajes y usuarios en el panel ADMIN:
+
+- Q: ¿Se mantiene la selección múltiple de asientos (decisión de la revisión anterior) o se cambia a un asiento por clic con confirmación? → A: Se cambia a **un asiento por clic**: el pasajero hace clic en un asiento libre, confirma con nombre/DNI, y esa reserva queda vinculada a exactamente ese asiento. Para reservar varios asientos, repite el flujo una vez por asiento. **Reemplaza** la decisión de la revisión anterior de mantener selección múltiple.
+- Q: ¿Sigue siendo configurable el número de asientos por viaje (decisión de la revisión anterior) o pasa a ser fijo? → A: Pasa a ser **fijo en 4 asientos** por camioneta (1 adelante junto al chofer, 3 juntos atrás), representados visualmente. Ya no se pregunta "número de asientos" al crear/editar un viaje. **Reemplaza** la Assumption "Mapa de asientos" de la especificación original (que decía "sin modelar la distribución física real del bus").
+- Q: ¿El ADMIN necesita una pantalla para ver/editar/eliminar viajes ya creados? → A: Sí. Se agrega "Gestionar viajes" en el panel ADMIN (antes no existía ningún enlace en la interfaz hacia las funciones de editar/eliminar, aunque las rutas ya existían).
+- Q: ¿El ADMIN necesita ver la lista de usuarios registrados? → A: Sí. Se agrega una vista de usuarios (DNI, nombre, email, rol) en el panel ADMIN.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Comprar un pasaje de principio a fin (Priority: P1)
 
-Un pasajero se registra o inicia sesión, consulta los viajes disponibles hacia su destino en el VRAEM, elige un viaje, selecciona uno o más asientos libres, ingresa el nombre y DNI de cada pasajero que viajará, paga mediante Yape o Plin, y obtiene su boleto con un código de reserva único.
+Un pasajero se registra o inicia sesión, consulta los viajes disponibles hacia su destino en el VRAEM, elige un viaje, hace clic en un asiento libre del mapa visual de la camioneta (4 asientos: 1 adelante, 3 atrás), confirma con el nombre y DNI del pasajero que viajará, paga mediante Yape o Plin, y obtiene su boleto con un código de reserva único. Si quiere reservar varios asientos, repite el flujo una vez por asiento.
 
 **Why this priority**: Es el flujo de negocio central del sistema; sin esta capacidad completa de extremo a extremo el sistema no genera ningún valor. Corresponde al flujo end-to-end priorizado por el proyecto (login → reservar → pagar → ver boleto).
 
@@ -38,27 +47,29 @@ Un pasajero se registra o inicia sesión, consulta los viajes disponibles hacia 
 **Acceptance Scenarios**:
 
 1. **Given** un pasajero no registrado, **When** se registra con email y contraseña e inicia sesión, **Then** accede a la lista de viajes disponibles.
-2. **Given** un pasajero autenticado viendo un viaje con asientos libres, **When** selecciona uno o más asientos libres e ingresa nombre y DNI para cada uno, **Then** el sistema calcula el monto total a pagar (precio del viaje × número de asientos).
-3. **Given** una selección de asientos con datos de pasajero completos, **When** el pasajero paga indicando método (Yape o Plin) y referencia de la operación, **Then** el sistema registra la reserva en estado "pendiente" y bloquea los asientos elegidos para que nadie más pueda seleccionarlos.
-4. **Given** una reserva cuyo pago fue confirmado, **When** el pasajero consulta su boleto, **Then** ve un código de reserva único junto con ruta, fecha, hora, asientos y datos de los pasajeros.
-5. **Given** dos pasajeros que intentan seleccionar el mismo asiento libre casi al mismo tiempo, **When** ambos confirman la selección, **Then** solo uno logra reservarlo y el otro recibe un aviso de que el asiento ya no está disponible.
+2. **Given** un pasajero autenticado viendo el mapa visual de asientos de un viaje (1 adelante, 3 atrás), **When** hace clic en un asiento libre, **Then** el sistema le pide confirmar la reserva de ese asiento e ingresar nombre y DNI del pasajero, mostrando el monto a pagar (precio del viaje).
+3. **Given** la confirmación de un asiento con datos de pasajero completos, **When** el pasajero acepta, **Then** el sistema registra la reserva en estado "pendiente" para ese asiento y lo bloquea para que nadie más pueda seleccionarlo, y lleva al pasajero a la pantalla de pago.
+4. **Given** una reserva "pendiente", **When** el pasajero paga indicando método (Yape o Plin) y referencia de la operación, **Then** el sistema registra el pago asociado a la reserva, pendiente de confirmación del ADMIN.
+5. **Given** una reserva cuyo pago fue confirmado, **When** el pasajero consulta su boleto, **Then** ve un código de reserva único junto con ruta, fecha, hora, asiento y datos del pasajero.
+6. **Given** dos pasajeros que intentan hacer clic y confirmar el mismo asiento libre casi al mismo tiempo, **When** ambos confirman, **Then** solo uno logra reservarlo y el otro recibe un aviso de que el asiento ya no está disponible.
 
 ---
 
 ### User Story 2 - Publicar y mantener viajes disponibles (Priority: P2)
 
-Un administrador inicia sesión con rol ADMIN y crea, edita o elimina viajes (ruta, fecha, hora, bus, precio, número de asientos), de modo que existan viajes vigentes para que los pasajeros puedan reservar.
+Un administrador inicia sesión con rol ADMIN y crea, edita o elimina viajes (ruta, fecha, hora, camioneta, chofer, precio; el número de asientos es fijo en 4), de modo que existan viajes vigentes para que los pasajeros puedan reservar, y puede gestionarlos desde una pantalla dedicada en su panel.
 
 **Why this priority**: Sin viajes publicados por el administrador no hay nada que los pasajeros puedan reservar; es el prerrequisito de contenido para la Historia 1, pero no es tan crítico como el flujo de compra en sí.
 
-**Independent Test**: Puede probarse iniciando sesión como ADMIN, creando un viaje nuevo con sus asientos, editando su precio u horario, y confirmando que los cambios se reflejan en la lista de viajes disponibles para los pasajeros.
+**Independent Test**: Puede probarse iniciando sesión como ADMIN, creando un viaje nuevo, verificando que aparece de inmediato en la lista de viajes disponibles para el pasajero, editando su precio u horario desde "Gestionar viajes", y confirmando que los cambios se reflejan.
 
 **Acceptance Scenarios**:
 
-1. **Given** un usuario con rol ADMIN autenticado, **When** crea un viaje indicando origen, destino, fecha, hora, camioneta (bus) y precio, **Then** el viaje aparece en la lista de viajes disponibles con su mapa de asientos generado según el número de asientos configurado.
-2. **Given** un viaje existente sin reservas pagadas, **When** el ADMIN edita su fecha, hora o precio, **Then** los cambios se reflejan inmediatamente para los pasajeros.
+1. **Given** un usuario con rol ADMIN autenticado, **When** crea un viaje indicando origen, destino, fecha, hora, camioneta (bus), chofer y precio, **Then** el viaje aparece de inmediato en la lista de viajes disponibles para los pasajeros, con sus 4 asientos generados automáticamente (1 adelante, 3 atrás), y el ADMIN ve un mensaje de éxito confirmando la creación.
+2. **Given** un viaje existente sin reservas pagadas, **When** el ADMIN lo edita desde "Gestionar viajes" (fecha, hora, precio, camioneta o chofer), **Then** los cambios se reflejan inmediatamente para los pasajeros.
 3. **Given** un usuario autenticado sin rol ADMIN, **When** intenta crear, editar o eliminar un viaje, **Then** el sistema rechaza la acción.
 4. **Given** un viaje con reservas pagadas asociadas, **When** el ADMIN intenta eliminarlo, **Then** el sistema impide la eliminación y explica el motivo.
+5. **Given** un ADMIN autenticado, **When** abre "Gestionar viajes" en su panel, **Then** ve todos los viajes (pasados y futuros) con acciones para editarlos, eliminarlos, o ver las reservas de ese viaje especifico.
 
 ---
 
@@ -72,8 +83,10 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 
 **Acceptance Scenarios**:
 
-1. **Given** existen reservas en distintos estados, **When** el ADMIN abre el listado de reservas, **Then** ve cada reserva con su viaje, pasajero(s), monto, estado (pendiente/pagado) y fecha.
+1. **Given** existen reservas en distintos estados, **When** el ADMIN abre el listado de reservas, **Then** ve cada reserva con su viaje, pasajero (nombre y DNI), comprador (nombre y email), asiento, monto, estado (pendiente/pagado) y fecha.
 2. **Given** una reserva pendiente cuyo plazo de pago venció, **When** el ADMIN consulta el listado, **Then** la reserva aparece con un estado que refleja que fue liberada/expirada y sus asientos vuelven a estar libres para otros pasajeros.
+3. **Given** un ADMIN autenticado, **When** abre el listado de reservas desde un viaje especifico en "Gestionar viajes", **Then** ve solo las reservas de ese viaje.
+4. **Given** un ADMIN autenticado, **When** abre la vista de usuarios en su panel, **Then** ve la lista de todos los usuarios registrados con DNI, nombre, email y rol.
 
 ---
 
@@ -81,8 +94,9 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 
 - ¿Qué ocurre si dos pasajeros seleccionan el mismo asiento casi simultáneamente? El sistema debe garantizar que solo una de las reservas tenga éxito y notificar al resto que el asiento ya no está disponible.
 - ¿Qué ocurre si un pasajero no completa el pago dentro del plazo definido? La reserva pasa a un estado de expirada/cancelada y los asientos que tenía bloqueados vuelven a estar libres.
-- ¿Qué ocurre si el ADMIN intenta reducir el número de asientos de un viaje por debajo de la cantidad ya reservada o pagada? El sistema rechaza el cambio.
 - ¿Qué ocurre si el ADMIN intenta eliminar un viaje con reservas pagadas? El sistema impide la eliminación.
+- ¿Qué ocurre si un pasajero hace clic en un asiento que justo dejó de estar libre (otro lo reservó primero)? El sistema lo redirige al mapa de asientos con un aviso de que ya no está disponible.
+- ¿Qué ocurre si el ADMIN crea un viaje con una fecha ya pasada? El sistema rechaza el formulario e indica que la fecha no puede ser anterior a hoy.
 - ¿Qué ocurre si un pasajero intenta pagar asientos que ya no están disponibles (por haber expirado su selección)? El sistema rechaza el pago y solicita reiniciar la selección de asientos.
 - ¿Qué ocurre si se ingresa un DNI o email con formato inválido durante el registro? El sistema rechaza el registro e indica el campo inválido.
 - ¿Qué ocurre si un pasajero intenta registrarse con un email ya usado por otra cuenta? El sistema rechaza el registro e indica que el email ya está en uso.
@@ -100,17 +114,17 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - **FR-002**: El sistema MUST almacenar la contraseña de cada usuario de forma encriptada (no en texto plano) y MUST permitir iniciar sesión con email y contraseña.
 - **FR-003**: El sistema MUST distinguir entre usuarios con rol PASAJERO y rol ADMIN, y MUST restringir las acciones de gestión de viajes exclusivamente al rol ADMIN.
 - **FR-004**: El sistema MUST mostrar a los pasajeros autenticados la lista de viajes disponibles con ruta (origen/destino), chofer, fecha, hora y precio. Un viaje sin asientos libres MUST mostrarse como "COMPLETO", sin permitir continuar a la selección de asientos.
-- **FR-005**: El sistema MUST mostrar, para un viaje elegido, un mapa simple de asientos indicando cuáles están libres y cuáles ocupados (reservados o pagados).
-- **FR-006**: El sistema MUST permitir a un pasajero seleccionar uno o más asientos libres de un viaje e ingresar el nombre y DNI del pasajero que ocupará cada asiento seleccionado; el DNI de cada pasajero MUST validarse solo por formato (8 dígitos numéricos), sin verificación externa. Antes de enviar la reserva, el sistema MUST pedir una confirmación explícita mostrando la cantidad de asientos elegidos y el monto total.
-- **FR-007**: El sistema MUST calcular el monto total a pagar como el precio del viaje multiplicado por el número de asientos seleccionados.
+- **FR-005**: El sistema MUST mostrar, para un viaje elegido, una representación visual de la camioneta con sus 4 asientos fijos para pasajeros (1 adelante, junto al chofer; 3 juntos atrás), indicando claramente cuáles están libres y cuáles ocupados (reservados o pagados), con colores distintos para cada estado.
+- **FR-006**: El sistema MUST permitir a un pasajero hacer clic en un asiento libre del mapa visual para reservarlo; antes de confirmar, MUST pedir el nombre y DNI del pasajero que lo ocupará y una confirmación explícita mostrando el asiento elegido (posición y número) y el monto a pagar. El DNI MUST validarse solo por formato (8 dígitos numéricos), sin verificación externa. Cada reserva cubre exactamente un asiento; para reservar varios, el pasajero repite el flujo una vez por asiento.
+- **FR-007**: El monto total de una reserva MUST ser el precio del viaje (una reserva cubre un unico asiento).
 - **FR-008**: El sistema MUST impedir que un mismo asiento sea asignado a más de una reserva activa (pendiente o pagada) al mismo tiempo, incluso ante solicitudes simultáneas.
 - **FR-009**: El sistema MUST permitir al pasajero pagar el monto total indicando el método (Yape o Plin) y una referencia/número de operación, y MUST registrar el pago asociado a la reserva.
 - **FR-010**: El sistema MUST crear la reserva en estado "pendiente" al momento de la selección de asientos y del envío del pago, y MUST bloquear (marcar como reservados) los asientos elegidos mientras la reserva esté pendiente.
 - **FR-011**: El sistema MUST liberar automáticamente los asientos de una reserva "pendiente" cuyo pago no fue confirmado dentro del plazo definido (ver Assumptions), devolviéndolos al estado "libre" y marcando la reserva como expirada.
 - **FR-012**: El sistema MUST cambiar el estado de la reserva y de sus asientos a "pagado" una vez confirmado el pago correspondiente.
 - **FR-013**: El sistema MUST generar un código de reserva único para cada reserva y MUST permitir al pasajero consultar su boleto (ruta, fecha, hora, asientos, pasajeros, código de reserva) una vez pagada.
-- **FR-014**: El sistema MUST permitir que el rol ADMIN cree viajes indicando ruta (origen/destino), fecha, hora, camioneta (bus), chofer y precio, y MUST generar automáticamente los asientos del viaje según el número de asientos configurado.
-- **FR-015**: El sistema MUST permitir que el rol ADMIN edite los datos de un viaje, salvo reducir el número de asientos por debajo de la cantidad ya reservada o pagada, lo cual MUST rechazar.
+- **FR-014**: El sistema MUST permitir que el rol ADMIN cree viajes indicando ruta (origen/destino), fecha (no anterior a hoy), hora, camioneta (bus), chofer y precio, y MUST generar automáticamente los 4 asientos fijos del viaje (1 adelante, 3 atrás). El viaje creado MUST aparecer de inmediato en la lista de viajes disponibles para los pasajeros, y el ADMIN MUST recibir una confirmación visible de que se creó correctamente.
+- **FR-015**: El sistema MUST permitir que el rol ADMIN edite los datos de un viaje (origen, destino, fecha, hora, camioneta, chofer, precio); el número de asientos no es editable por ser fijo.
 - **FR-016**: El sistema MUST permitir que el rol ADMIN elimine un viaje únicamente cuando no tenga reservas pagadas asociadas.
 - **FR-017**: El sistema MUST permitir que el rol ADMIN visualice el listado de todas las reservas junto con su estado (pendiente/pagado/expirada) y datos principales (viaje, pasajero(s), monto, fecha).
 - **FR-018**: El sistema MUST restringir el acceso a cualquier funcionalidad de creación, edición o eliminación de viajes a usuarios que no tengan rol ADMIN.
@@ -118,14 +132,17 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - **FR-020**: El sistema MUST permitir que cualquier usuario recupere el acceso a su cuenta indicando su email; si el email existe, MUST generar una contraseña temporal, guardarla de forma encriptada, y mostrarla una única vez en pantalla (no hay envío de correo real en esta versión).
 - **FR-021**: Tras iniciar sesión, el sistema MUST dirigir al usuario con rol ADMIN a su panel de administración y al usuario con rol PASAJERO a la lista de viajes, en vez de una única página de bienvenida para todos los roles.
 - **FR-022**: El sistema MUST ofrecer, en toda pantalla autenticada, un control visible y funcional para cerrar sesión.
+- **FR-023**: El sistema MUST ofrecer al rol ADMIN una pantalla de "Gestionar viajes" que liste todos los viajes (pasados y futuros) con acciones para editar, eliminar, y ver las reservas de cada viaje especifico.
+- **FR-024**: El sistema MUST ofrecer al rol ADMIN una vista con la lista de todos los usuarios registrados (DNI, nombre, email, rol).
+- **FR-025**: El sistema MUST mostrar mensajes de confirmación visibles al usuario despues de crear/editar/eliminar un viaje, crear una reserva, registrar un pago, y confirmar un pago; y mensajes de error claros cuando una accion no se puede completar.
 
 ### Key Entities
 
 - **Usuario**: Persona que usa el sistema; atributos: DNI (único, 8 dígitos, solo validado por formato), nombre, email (único), contraseña (almacenada de forma encriptada), rol (PASAJERO o ADMIN).
 - **Camioneta (vehículo, también referido como "bus")**: Unidad de transporte asignada a los viajes; atributos: identificador, placa, ruta que cubre habitualmente. "Bus" y "Camioneta" se usan como sinónimos en este documento; la entidad canónica es `Camioneta`.
-- **Viaje**: Salida programada entre dos puntos del recorrido Ayacucho-VRAEM; atributos: origen, destino, fecha, hora, camioneta asignada, chofer (nombre, campo de texto simple), precio por asiento, número total de asientos. Se relaciona con múltiples Asientos y puede tener múltiples Reservas.
-- **Asiento**: Unidad reservable dentro de un viaje; atributos: número, estado (libre/reservado/pagado); pertenece a un único Viaje.
-- **Reserva**: Solicitud de uno o más asientos hecha por un Usuario para un Viaje; atributos: usuario comprador, viaje, asientos elegidos (cada uno con nombre y DNI del pasajero que viajará), monto total, estado (pendiente/pagado/expirada), fecha de creación. Se relaciona con un Pago.
+- **Viaje**: Salida programada entre dos puntos del recorrido Ayacucho-VRAEM; atributos: origen, destino, fecha (no anterior a hoy), hora, camioneta asignada, chofer (nombre, campo de texto simple), precio por asiento. Siempre tiene exactamente 4 Asientos (fijo, no configurable). Se relaciona con múltiples Asientos y puede tener múltiples Reservas.
+- **Asiento**: Unidad reservable dentro de un viaje; atributos: número (1 a 4), posición (el asiento 1 va adelante junto al chofer; los asientos 2-4 van juntos atrás; se deriva del número, no es un campo separado), estado (libre/reservado/pagado); pertenece a un único Viaje.
+- **Reserva**: Solicitud de un asiento hecha por un Usuario para un Viaje; atributos: usuario comprador, viaje, asiento elegido (con nombre y DNI del pasajero que viajará), monto total (= precio del viaje), estado (pendiente/pagado/expirada), fecha de creación. Se relaciona con un Pago. Cada Reserva cubre exactamente un Asiento; un pasajero que quiere varios asientos crea varias Reservas.
 - **Pago**: Registro del intento de cobro de una Reserva; atributos: método (Yape o Plin), estado, referencia/número de operación; pertenece a una única Reserva.
 
 ## Success Criteria *(mandatory)*
@@ -145,9 +162,9 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - **Plazo de liberación de asientos**: una reserva "pendiente" sin confirmación de pago se libera automáticamente a los 30 minutos de creada. La verificación se realiza mediante una revisión periódica simple (no en tiempo real), consistente con el principio de simplicidad del proyecto.
 - **Registro obligatorio**: solo pasajeros registrados e identificados pueden reservar asientos; no se contempla compra como invitado.
 - **Comprador vs. pasajero**: el usuario que compra (inicia sesión) puede reservar asientos para terceros; el nombre y DNI ingresados por asiento pueden ser distintos de los datos de la cuenta que realiza la compra.
-- **Mapa de asientos**: se representa como una lista o cuadrícula simple numerada según la cantidad de asientos del viaje, sin modelar la distribución física real del bus.
+- **Mapa de asientos**: se representa visualmente con una distribución fija de 4 asientos (1 adelante junto al chofer, 3 juntos atrás), la misma para todos los viajes. *(Reemplaza la Assumption original de esta spec, que decía "sin modelar la distribución física real del bus"; ver Clarifications, segunda revisión.)*
 - **Sin cancelaciones ni reembolsos**: esta versión no contempla que el pasajero cancele una reserva ya pagada ni procesos de reembolso.
-- **Límite de asientos por reserva**: no hay un tope adicional al de asientos libres disponibles en el viaje; un pasajero puede reservar tantos asientos libres como existan.
+- **Una reserva, un asiento**: cada Reserva cubre exactamente un Asiento. Un pasajero que quiere reservar varios asientos (ej. para su familia) repite el flujo de selección y pago una vez por asiento, generando varias Reservas independientes.
 - **Asignación de rol ADMIN**: el rol ADMIN se asigna manualmente (por ejemplo, directamente en la base de datos o por un proceso interno); no existe un flujo de autoregistro para administradores.
 - **Rutas cubiertas**: las rutas del sistema conectan Ayacucho con San Francisco, Sivia, Santa Rosa, Kimbiri y Pichari (VRAEM), pudiendo un viaje tener como origen o destino cualquiera de estos puntos.
 - **Chofer**: se registra como un campo de texto simple del Viaje (nombre del chofer), sin una entidad `Chofer` separada ni gestión propia (alta/edición/eliminación independiente). No se contempla foto ni datos adicionales del chofer en esta versión.

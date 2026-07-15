@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -20,6 +19,12 @@ import pe.vraem.pasajes.viajes.repository.ViajeRepository;
 
 @Service
 public class ViajeService {
+
+    /**
+     * La camioneta tiene 4 asientos fijos para pasajeros: 1 adelante (junto al
+     * chofer, numero 1) y 3 juntos atras (numeros 2-4). No es configurable.
+     */
+    public static final int CAPACIDAD_ASIENTOS = 4;
 
     private final ViajeRepository viajeRepository;
     private final AsientoRepository asientoRepository;
@@ -41,6 +46,14 @@ public class ViajeService {
         return viajeRepository.findAllByOrderByFechaAscHoraAsc().stream()
                 .filter(viaje -> !viaje.getFecha().isBefore(hoy))
                 .toList();
+    }
+
+    /**
+     * Lista todos los viajes (pasados y futuros) para la gestion del ADMIN.
+     */
+    @Transactional(readOnly = true)
+    public List<Viaje> listarTodos() {
+        return viajeRepository.findAllByOrderByFechaAscHoraAsc();
     }
 
     @Transactional(readOnly = true)
@@ -69,16 +82,15 @@ public class ViajeService {
     }
 
     /**
-     * Crea un viaje y genera automaticamente sus asientos (FR-014).
+     * Crea un viaje y genera automaticamente sus 4 asientos fijos (FR-014).
      */
     @Transactional
     public Viaje crearViaje(String origen, String destino, LocalDate fecha, LocalTime hora, Camioneta camioneta,
-            BigDecimal precio, int numeroAsientos, String chofer) {
-        Viaje viaje = viajeRepository
-                .save(new Viaje(origen, destino, fecha, hora, camioneta, precio, numeroAsientos, chofer));
+            BigDecimal precio, String chofer) {
+        Viaje viaje = viajeRepository.save(new Viaje(origen, destino, fecha, hora, camioneta, precio, chofer));
 
         List<Asiento> asientos = new ArrayList<>();
-        for (int numero = 1; numero <= numeroAsientos; numero++) {
+        for (int numero = 1; numero <= CAPACIDAD_ASIENTOS; numero++) {
             asientos.add(new Asiento(viaje, numero));
         }
         asientoRepository.saveAll(asientos);
@@ -87,16 +99,13 @@ public class ViajeService {
     }
 
     /**
-     * Edita un viaje existente. Si se reduce el numero de asientos, rechaza el
-     * cambio cuando ya hay asientos reservados o pagados por encima del nuevo
-     * limite (FR-015).
+     * Edita un viaje existente. La cantidad de asientos es fija (4) y no se
+     * modifica al editar.
      */
     @Transactional
     public Viaje editarViaje(Long id, String origen, String destino, LocalDate fecha, LocalTime hora,
-            Camioneta camioneta, BigDecimal precio, int numeroAsientos, String chofer) {
+            Camioneta camioneta, BigDecimal precio, String chofer) {
         Viaje viaje = obtenerDetalle(id);
-
-        ajustarNumeroDeAsientos(viaje, numeroAsientos);
 
         viaje.setOrigen(origen);
         viaje.setDestino(destino);
@@ -104,36 +113,9 @@ public class ViajeService {
         viaje.setHora(hora);
         viaje.setCamioneta(camioneta);
         viaje.setPrecio(precio);
-        viaje.setNumeroAsientos(numeroAsientos);
         viaje.setChofer(chofer);
 
         return viajeRepository.save(viaje);
-    }
-
-    private void ajustarNumeroDeAsientos(Viaje viaje, int nuevoNumeroAsientos) {
-        List<Asiento> actuales = asientoRepository.findAllByViajeOrderByNumeroAsc(viaje);
-        int actualCount = actuales.size();
-
-        if (nuevoNumeroAsientos > actualCount) {
-            int maxNumero = actuales.stream().mapToInt(Asiento::getNumero).max().orElse(0);
-            List<Asiento> nuevos = new ArrayList<>();
-            for (int i = 1; i <= nuevoNumeroAsientos - actualCount; i++) {
-                nuevos.add(new Asiento(viaje, maxNumero + i));
-            }
-            asientoRepository.saveAll(nuevos);
-        } else if (nuevoNumeroAsientos < actualCount) {
-            long ocupados = actuales.stream().filter(a -> a.getEstado() != EstadoAsiento.LIBRE).count();
-            if (ocupados > nuevoNumeroAsientos) {
-                throw new ViajeInvalidoException(
-                        "No se puede reducir el numero de asientos por debajo de los ya reservados o pagados");
-            }
-            List<Asiento> libresDescendente = actuales.stream()
-                    .filter(a -> a.getEstado() == EstadoAsiento.LIBRE)
-                    .sorted(Comparator.comparingInt(Asiento::getNumero).reversed())
-                    .toList();
-            int aEliminar = actualCount - nuevoNumeroAsientos;
-            asientoRepository.deleteAll(libresDescendente.subList(0, aEliminar));
-        }
     }
 
     /**

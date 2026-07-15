@@ -27,7 +27,6 @@ import pe.vraem.pasajes.reservas.model.Reserva;
 import pe.vraem.pasajes.reservas.repository.ReservaRepository;
 import pe.vraem.pasajes.reservas.service.AsientoNoDisponibleException;
 import pe.vraem.pasajes.reservas.service.ReservaService;
-import pe.vraem.pasajes.reservas.service.SeleccionAsiento;
 import pe.vraem.pasajes.reservas.service.SeleccionInvalidaException;
 import pe.vraem.pasajes.viajes.model.Asiento;
 import pe.vraem.pasajes.viajes.model.Camioneta;
@@ -58,7 +57,7 @@ class ReservaServiceTest {
 
         Camioneta camioneta = new Camioneta("ABC-123", "Ayacucho - Kimbiri");
         viaje = new Viaje("Ayacucho", "Kimbiri", LocalDate.now().plusDays(1), LocalTime.of(8, 0), camioneta,
-                new BigDecimal("50.00"), 20, "Carlos Mamani");
+                new BigDecimal("50.00"), "Carlos Mamani");
         ReflectionTestUtils.setField(viaje, "id", 10L);
     }
 
@@ -69,32 +68,32 @@ class ReservaServiceTest {
     }
 
     @Test
-    void creaReservaCalculaMontoYOcupaAsientos() {
-        Asiento asiento1 = asientoLibre(100L, 1);
-        Asiento asiento2 = asientoLibre(101L, 2);
+    void creaReservaCalculaMontoYOcupaElAsiento() {
+        Asiento asiento = asientoLibre(100L, 1);
 
-        when(asientoRepository.findAllByIdForUpdate(List.of(100L, 101L)))
-                .thenReturn(List.of(asiento1, asiento2));
+        when(asientoRepository.findAllByIdForUpdate(List.of(100L))).thenReturn(List.of(asiento));
         when(reservaRepository.existsByCodigoReserva(anyString())).thenReturn(false);
         when(reservaRepository.save(any(Reserva.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        List<SeleccionAsiento> seleccion = List.of(
-                new SeleccionAsiento(100L, "Ana Quispe", "45678912"),
-                new SeleccionAsiento(101L, "Luis Rojas", "78912345"));
+        Reserva reserva = reservaService.crearReserva(viaje, comprador, 100L, "Ana Quispe", "45678912");
 
-        Reserva reserva = reservaService.crearReserva(viaje, comprador, seleccion);
-
-        assertThat(reserva.getMontoTotal()).isEqualByComparingTo("100.00");
+        assertThat(reserva.getMontoTotal()).isEqualByComparingTo("50.00");
         assertThat(reserva.getEstado()).isEqualTo(EstadoReserva.PENDIENTE);
         assertThat(reserva.getCodigoReserva()).isNotBlank();
-        assertThat(asiento1.getEstado()).isEqualTo(EstadoAsiento.RESERVADO);
-        assertThat(asiento1.getNombrePasajero()).isEqualTo("Ana Quispe");
-        assertThat(asiento2.getDniPasajero()).isEqualTo("78912345");
+        assertThat(asiento.getEstado()).isEqualTo(EstadoAsiento.RESERVADO);
+        assertThat(asiento.getNombrePasajero()).isEqualTo("Ana Quispe");
+        assertThat(asiento.getDniPasajero()).isEqualTo("45678912");
     }
 
     @Test
-    void rechazaSeleccionSinAsientos() {
-        assertThatThrownBy(() -> reservaService.crearReserva(viaje, comprador, List.of()))
+    void rechazaNombrePasajeroVacio() {
+        assertThatThrownBy(() -> reservaService.crearReserva(viaje, comprador, 100L, " ", "45678912"))
+                .isInstanceOf(SeleccionInvalidaException.class);
+    }
+
+    @Test
+    void rechazaDniPasajeroInvalido() {
+        assertThatThrownBy(() -> reservaService.crearReserva(viaje, comprador, 100L, "Ana Quispe", "123"))
                 .isInstanceOf(SeleccionInvalidaException.class);
     }
 
@@ -105,9 +104,7 @@ class ReservaServiceTest {
 
         when(asientoRepository.findAllByIdForUpdate(List.of(100L))).thenReturn(List.of(asientoOcupado));
 
-        List<SeleccionAsiento> seleccion = List.of(new SeleccionAsiento(100L, "Ana Quispe", "45678912"));
-
-        assertThatThrownBy(() -> reservaService.crearReserva(viaje, comprador, seleccion))
+        assertThatThrownBy(() -> reservaService.crearReserva(viaje, comprador, 100L, "Ana Quispe", "45678912"))
                 .isInstanceOf(AsientoNoDisponibleException.class);
     }
 

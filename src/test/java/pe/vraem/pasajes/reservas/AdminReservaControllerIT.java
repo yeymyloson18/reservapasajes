@@ -60,7 +60,7 @@ class AdminReservaControllerIT {
 
         Camioneta camioneta = camionetaRepository.save(new Camioneta("LST-001", "Ayacucho - Santa Rosa"));
         Viaje viaje = viajeRepository.save(new Viaje("Ayacucho", "Santa Rosa", LocalDate.now().plusDays(4),
-                LocalTime.of(6, 30), camioneta, new BigDecimal("48.00"), 5, "Carlos Mamani"));
+                LocalTime.of(6, 30), camioneta, new BigDecimal("48.00"), "Carlos Mamani"));
 
         Reserva reservaPagada = new Reserva(comprador, viaje, new BigDecimal("48.00"));
         reservaPagada.asignarCodigoReserva("PAGADA01");

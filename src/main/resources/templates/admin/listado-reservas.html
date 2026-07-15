@@ -7,17 +7,29 @@
     <nav th:replace="~{fragments/layout :: nav}"></nav>
 
     <main class="container">
-        <h1 class="h3 mb-4">Reservas</h1>
+        <p class="mb-2"><a th:href="@{/admin}">&larr; Volver al panel</a></p>
 
+        <h1 class="h3 mb-1">Reservas</h1>
+        <p class="text-muted" th:if="${viajeId != null}">
+            Mostrando solo las reservas del viaje seleccionado. <a th:href="@{/admin/reservas}">Ver todas</a>.
+        </p>
+
+        <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
         <div th:if="${errorGeneral}" class="alert alert-danger" th:text="${errorGeneral}"></div>
 
-        <div class="table-responsive">
+        <div th:if="${#lists.isEmpty(reservas)}" class="alert alert-secondary">
+            No hay reservas para mostrar.
+        </div>
+
+        <div class="table-responsive" th:unless="${#lists.isEmpty(reservas)}">
             <table class="table table-striped align-middle">
                 <thead>
                     <tr>
                         <th>Codigo</th>
                         <th>Comprador</th>
+                        <th>Pasajero</th>
                         <th>Viaje</th>
+                        <th>Asiento</th>
                         <th>Monto</th>
                         <th>Estado</th>
                         <th>Fecha</th>
@@ -27,8 +39,17 @@
                 <tbody>
                     <tr th:each="reserva : ${reservas}">
                         <td th:text="${reserva.codigoReserva}">ABCD1234</td>
-                        <td th:text="${reserva.usuario.nombre}">Nombre</td>
+                        <td>
+                            <span th:text="${reserva.usuario.nombre}">Nombre</span><br />
+                            <small class="text-muted" th:text="${reserva.usuario.email}">correo@example.com</small>
+                        </td>
+                        <td th:with="asiento=${asientoPorReserva.get(reserva.id)}">
+                            <span th:if="${asiento != null}" th:text="${asiento.nombrePasajero}">Nombre pasajero</span>
+                            <br />
+                            <small class="text-muted" th:if="${asiento != null}" th:text="'DNI ' + ${asiento.dniPasajero}">DNI 00000000</small>
+                        </td>
                         <td th:text="${reserva.viaje.origen + ' &rarr; ' + reserva.viaje.destino}">Ruta</td>
+                        <td th:text="${asientoPorReserva.get(reserva.id)?.numero}">1</td>
                         <td>S/ <span th:text="${reserva.montoTotal}">0.00</span></td>
                         <td>
                             <span class="badge"
@@ -38,7 +59,8 @@
                         <td th:text="${reserva.fechaCreacion}">2026-01-01</td>
                         <td>
                             <form th:if="${reserva.estado.name() == 'PENDIENTE'}"
-                                  th:action="@{/admin/reservas/{id}/confirmar-pago(id=${reserva.id})}" method="post">
+                                  th:action="@{/admin/reservas/{id}/confirmar-pago(id=${reserva.id})}" method="post"
+                                  th:attr="onsubmit=|return confirm('¿Confirmar el pago de la reserva ${reserva.codigoReserva}?')|">
                                 <button type="submit" class="btn btn-sm btn-success">Confirmar pago</button>
                             </form>
                         </td>

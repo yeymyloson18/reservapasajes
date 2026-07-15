@@ -26,6 +26,7 @@ import pe.vraem.pasajes.viajes.model.Viaje;
 import pe.vraem.pasajes.viajes.repository.AsientoRepository;
 import pe.vraem.pasajes.viajes.repository.CamionetaRepository;
 import pe.vraem.pasajes.viajes.repository.ViajeRepository;
+import pe.vraem.pasajes.viajes.service.ViajeService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -64,7 +65,6 @@ class AdminViajeControllerIT {
                         .param("placaCamioneta", "ADM-001")
                         .param("rutaCamioneta", "Ayacucho - Sivia")
                         .param("precio", "45.00")
-                        .param("numeroAsientos", "10")
                         .param("chofer", "Carlos Mamani"))
                 .andExpect(status().is3xxRedirection());
 
@@ -72,7 +72,7 @@ class AdminViajeControllerIT {
         Viaje viaje = viajeRepository.findAll().stream()
                 .filter(v -> v.getCamioneta().getId().equals(camioneta.getId()))
                 .findFirst().orElseThrow();
-        assertThat(asientoRepository.findAllByViajeOrderByNumeroAsc(viaje)).hasSize(10);
+        assertThat(asientoRepository.findAllByViajeOrderByNumeroAsc(viaje)).hasSize(ViajeService.CAPACIDAD_ASIENTOS);
 
         mockMvc.perform(post("/admin/viajes/{id}", viaje.getId())
                         .with(csrf())
@@ -84,7 +84,6 @@ class AdminViajeControllerIT {
                         .param("placaCamioneta", "ADM-001")
                         .param("rutaCamioneta", "Ayacucho - Sivia")
                         .param("precio", "50.00")
-                        .param("numeroAsientos", "10")
                         .param("chofer", "Carlos Mamani"))
                 .andExpect(status().is3xxRedirection());
 
@@ -114,7 +113,7 @@ class AdminViajeControllerIT {
                         .param("placaCamioneta", "ADM-002")
                         .param("rutaCamioneta", "Ayacucho - Pichari")
                         .param("precio", "45.00")
-                        .param("numeroAsientos", "10"))
+                        .param("chofer", "Carlos Mamani"))
                 .andExpect(status().isForbidden());
 
         assertThat(camionetaRepository.findByPlaca("ADM-002")).isEmpty();

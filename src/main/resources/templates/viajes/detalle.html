@@ -6,8 +6,10 @@
 <body>
     <nav th:replace="~{fragments/layout :: nav}"></nav>
 
-    <main class="container" style="max-width: 720px;">
+    <main class="container" style="max-width: 560px;">
         <p class="mb-2"><a th:href="@{/viajes}">&larr; Volver a viajes</a></p>
+
+        <div th:replace="~{fragments/layout :: pasos(2)}"></div>
 
         <h1 class="h3 mb-1" th:text="${viaje.origen + ' &rarr; ' + viaje.destino}">Ruta</h1>
         <p class="text-muted mb-4">
@@ -19,60 +21,57 @@
 
         <div th:if="${errorReserva}" class="alert alert-danger" th:text="${errorReserva}"></div>
 
-        <h2 class="h5 mb-3">Mapa de asientos</h2>
+        <h2 class="h5 mb-3">Elige tu asiento</h2>
         <p class="small text-muted">
             <span class="badge bg-success">Libre</span>
             <span class="badge bg-secondary">Ocupado</span>
+            &mdash; Haz clic en un asiento libre para reservarlo.
         </p>
 
-        <form th:action="@{/viajes/{id}/reservas(id=${viaje.id})}" th:object="${reservaForm}" method="post"
-              th:attr="onsubmit=|return confirmarReserva(${viaje.precio})|">
-            <div class="row row-cols-3 row-cols-sm-4 row-cols-md-5 g-2 mb-4">
-                <div class="col" th:each="asiento, iter : ${asientos}">
-                    <input type="hidden" th:field="*{asientos[__${iter.index}__].asientoId}" />
+        <!--/* Representacion visual simple de la camioneta: 1 asiento adelante (junto al chofer) + 3 asientos juntos atras */-->
+        <div class="border rounded p-3 mb-4" style="max-width: 320px; margin: 0 auto; background: #f8f9fa;">
 
-                    <div class="form-check border rounded p-2 text-center"
-                         th:classappend="${asiento.estado.name() == 'LIBRE'} ? 'border-success' : 'border-secondary bg-light'">
-                        <input class="form-check-input asiento-checkbox" type="checkbox"
-                               th:field="*{asientos[__${iter.index}__].seleccionado}"
-                               th:disabled="${asiento.estado.name() != 'LIBRE'}"
-                               th:attr="onclick=|toggleDatosPasajero(${iter.index})|" />
-                        <label class="form-check-label d-block" th:for="${'asientos' + iter.index + '.seleccionado'}"
-                               th:text="${asiento.numero}">1</label>
-                        <span class="badge" th:classappend="${asiento.estado.name() == 'LIBRE'} ? 'bg-success' : 'bg-secondary'"
-                              th:text="${asiento.estado.name() == 'LIBRE' ? 'Libre' : 'Ocupado'}">Libre</span>
-                    </div>
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-4">
+                <div class="text-center" style="width: 70px;">
+                    <div style="font-size: 1.8rem;">&#128100;</div>
+                    <small class="text-muted">Chofer</small>
+                </div>
 
-                    <div class="mt-1 d-none" th:id="${'datos-pasajero-' + iter.index}">
-                        <input type="text" class="form-control form-control-sm mb-1" placeholder="Nombre del pasajero"
-                               th:field="*{asientos[__${iter.index}__].nombrePasajero}" />
-                        <input type="text" class="form-control form-control-sm" placeholder="DNI (8 digitos)"
-                               maxlength="8" th:field="*{asientos[__${iter.index}__].dniPasajero}" />
-                    </div>
+                <a th:if="${asientoAdelante.estado.name() == 'LIBRE'}"
+                   th:href="@{/viajes/{id}/asientos/{asientoId}(id=${viaje.id},asientoId=${asientoAdelante.id})}"
+                   class="btn btn-success text-center" style="width: 90px; height: 70px;">
+                    <div>Adelante</div>
+                    <small th:text="'Asiento ' + ${asientoAdelante.numero}">Asiento 1</small><br />
+                    <small>LIBRE</small>
+                </a>
+                <div th:unless="${asientoAdelante.estado.name() == 'LIBRE'}"
+                     class="btn btn-secondary disabled text-center" style="width: 90px; height: 70px;">
+                    <div>Adelante</div>
+                    <small th:text="'Asiento ' + ${asientoAdelante.numero}">Asiento 1</small><br />
+                    <small>OCUPADO</small>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary">Reservar asientos seleccionados</button>
-        </form>
+            <p class="text-center small text-muted mb-2">Atras</p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <th:block th:each="asiento : ${asientosAtras}">
+                    <a th:if="${asiento.estado.name() == 'LIBRE'}"
+                       th:href="@{/viajes/{id}/asientos/{asientoId}(id=${viaje.id},asientoId=${asiento.id})}"
+                       class="btn btn-success text-center" style="width: 90px; height: 70px;">
+                        <div>Atras</div>
+                        <small th:text="'Asiento ' + ${asiento.numero}">Asiento 2</small><br />
+                        <small>LIBRE</small>
+                    </a>
+                    <div th:unless="${asiento.estado.name() == 'LIBRE'}"
+                         class="btn btn-secondary disabled text-center" style="width: 90px; height: 70px;">
+                        <div>Atras</div>
+                        <small th:text="'Asiento ' + ${asiento.numero}">Asiento 2</small><br />
+                        <small>OCUPADO</small>
+                    </div>
+                </th:block>
+            </div>
+        </div>
     </main>
-
-    <script th:inline="javascript">
-        function toggleDatosPasajero(index) {
-            var checkbox = document.querySelectorAll('.asiento-checkbox')[index];
-            var datos = document.getElementById('datos-pasajero-' + index);
-            datos.classList.toggle('d-none', !checkbox.checked);
-        }
-
-        function confirmarReserva(precioPorAsiento) {
-            var seleccionados = document.querySelectorAll('.asiento-checkbox:checked').length;
-            if (seleccionados === 0) {
-                alert('Selecciona al menos un asiento libre antes de reservar.');
-                return false;
-            }
-            var total = (seleccionados * precioPorAsiento).toFixed(2);
-            return confirm('Deseas reservar ' + seleccionados + ' asiento(s) por un total de S/ ' + total + '?');
-        }
-    </script>
 
     <footer th:replace="~{fragments/layout :: footer}"></footer>
 </body>

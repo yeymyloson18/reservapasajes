@@ -41,6 +41,16 @@
         </div>
     </nav>
 
+    <nav th:fragment="pasos(pasoActual)" aria-label="Progreso de la compra" class="mb-4">
+        <ol class="d-flex list-unstyled gap-2 flex-wrap small">
+            <li th:each="paso, iter : ${ {'Viajes', 'Asiento', 'Pago', 'Boleta'} }"
+                th:classappend="${iter.count == pasoActual} ? 'fw-bold text-primary' : 'text-muted'">
+                <span th:text="${iter.count} + '. ' + ${paso}">1. Viajes</span>
+                <span th:unless="${iter.last}">&rarr;</span>
+            </li>
+        </ol>
+    </nav>
+
     <th:block th:fragment="footer">
         <footer class="text-center text-muted py-4 mt-5 border-top">
             <small>Pasajes VRAEM &mdash; Ayacucho / San Francisco / Sivia / Santa Rosa / Kimbiri / Pichari</small>

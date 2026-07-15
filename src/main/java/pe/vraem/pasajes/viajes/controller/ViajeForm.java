@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -17,6 +18,7 @@ public class ViajeForm {
     private String destino;
 
     @NotNull(message = "La fecha es obligatoria")
+    @FutureOrPresent(message = "La fecha no puede ser anterior a hoy")
     private LocalDate fecha;
 
     @NotNull(message = "La hora es obligatoria")
@@ -30,9 +32,6 @@ public class ViajeForm {
     @NotNull(message = "El precio es obligatorio")
     @Positive(message = "El precio debe ser mayor a cero")
     private BigDecimal precio;
-
-    @Positive(message = "El numero de asientos debe ser mayor a cero")
-    private int numeroAsientos;
 
     @NotBlank(message = "El nombre del chofer es obligatorio")
     private String chofer;
@@ -91,14 +90,6 @@ public class ViajeForm {
 
     public void setPrecio(BigDecimal precio) {
         this.precio = precio;
-    }
-
-    public int getNumeroAsientos() {
-        return numeroAsientos;
-    }
-
-    public void setNumeroAsientos(int numeroAsientos) {
-        this.numeroAsientos = numeroAsientos;
     }
 
     public String getChofer() {

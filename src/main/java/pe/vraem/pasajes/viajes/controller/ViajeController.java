@@ -7,8 +7,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import pe.vraem.pasajes.reservas.controller.AsientoSeleccionDTO;
-import pe.vraem.pasajes.reservas.controller.ReservaForm;
 import pe.vraem.pasajes.viajes.model.Asiento;
 import pe.vraem.pasajes.viajes.model.Viaje;
 import pe.vraem.pasajes.viajes.repository.AsientoRepository;
@@ -39,12 +37,9 @@ public class ViajeController {
         Viaje viaje = viajeService.obtenerDetalle(id);
         List<Asiento> asientos = asientoRepository.findAllByViajeOrderByNumeroAsc(viaje);
 
-        ReservaForm reservaForm = new ReservaForm();
-        asientos.forEach(asiento -> reservaForm.getAsientos().add(new AsientoSeleccionDTO(asiento.getId())));
-
         model.addAttribute("viaje", viaje);
-        model.addAttribute("asientos", asientos);
-        model.addAttribute("reservaForm", reservaForm);
+        model.addAttribute("asientoAdelante", asientos.stream().filter(Asiento::esAdelante).findFirst().orElse(null));
+        model.addAttribute("asientosAtras", asientos.stream().filter(a -> !a.esAdelante()).toList());
         return "viajes/detalle";
     }
 }

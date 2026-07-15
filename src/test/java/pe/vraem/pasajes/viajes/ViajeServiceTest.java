@@ -53,16 +53,16 @@ class ViajeServiceTest {
         camioneta = new Camioneta("ABC-123", "Ayacucho - Kimbiri");
     }
 
-    private Viaje viajeConId(long id, int numeroAsientos) {
+    private Viaje viajeConId(long id) {
         Viaje viaje = new Viaje("Ayacucho", "Kimbiri", LocalDate.now().plusDays(1), LocalTime.of(8, 0), camioneta,
-                new BigDecimal("50.00"), numeroAsientos, "Carlos Mamani");
+                new BigDecimal("50.00"), "Carlos Mamani");
         ReflectionTestUtils.setField(viaje, "id", id);
         return viaje;
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    void crearViajeGeneraAsientosLibresSegunElNumeroConfigurado() {
+    void crearViajeGeneraLosCuatroAsientosFijos() {
         when(viajeRepository.save(any(Viaje.class))).thenAnswer(inv -> {
             Viaje v = inv.getArgument(0);
             ReflectionTestUtils.setField(v, "id", 1L);
@@ -70,40 +70,22 @@ class ViajeServiceTest {
         });
 
         viajeService.crearViaje("Ayacucho", "Kimbiri", LocalDate.now().plusDays(1), LocalTime.of(8, 0), camioneta,
-                new BigDecimal("50.00"), 5, "Carlos Mamani");
+                new BigDecimal("50.00"), "Carlos Mamani");
 
         ArgumentCaptor<List<Asiento>> captor = ArgumentCaptor.forClass(List.class);
         verify(asientoRepository).saveAll(captor.capture());
 
         List<Asiento> asientos = captor.getValue();
-        assertThat(asientos).hasSize(5);
+        assertThat(asientos).hasSize(ViajeService.CAPACIDAD_ASIENTOS);
         assertThat(asientos).allMatch(a -> a.getEstado() == EstadoAsiento.LIBRE);
-        assertThat(asientos).extracting(Asiento::getNumero).containsExactly(1, 2, 3, 4, 5);
-    }
-
-    @Test
-    void editarViajeRechazaReducirAsientosPorDebajoDeLosOcupados() {
-        Viaje viaje = viajeConId(1L, 3);
-        Asiento libre = new Asiento(viaje, 1);
-        Asiento reservado = new Asiento(viaje, 2);
-        reservado.ocupar(null, "Pasajero", "12345678");
-        Asiento pagado = new Asiento(viaje, 3);
-        pagado.ocupar(null, "Pasajero2", "87654321");
-        pagado.marcarPagado();
-
-        when(viajeRepository.findById(1L)).thenReturn(java.util.Optional.of(viaje));
-        when(asientoRepository.findAllByViajeOrderByNumeroAsc(viaje)).thenReturn(List.of(libre, reservado, pagado));
-
-        assertThatThrownBy(() -> viajeService.editarViaje(1L, "Ayacucho", "Kimbiri", viaje.getFecha(), viaje.getHora(),
-                camioneta, new BigDecimal("50.00"), 1, "Carlos Mamani"))
-                .isInstanceOf(ViajeInvalidoException.class);
-
-        verify(viajeRepository, never()).save(any(Viaje.class));
+        assertThat(asientos).extracting(Asiento::getNumero).containsExactly(1, 2, 3, 4);
+        assertThat(asientos.get(0).esAdelante()).isTrue();
+        assertThat(asientos.get(1).esAdelante()).isFalse();
     }
 
     @Test
     void eliminarViajeRechazaSiTieneReservasPagadas() {
-        Viaje viaje = viajeConId(1L, 2);
+        Viaje viaje = viajeConId(1L);
 
         when(viajeRepository.findById(1L)).thenReturn(java.util.Optional.of(viaje));
         when(asientoRepository.countByViajeAndEstadoIn(viaje, List.of(EstadoAsiento.PAGADO))).thenReturn(1L);

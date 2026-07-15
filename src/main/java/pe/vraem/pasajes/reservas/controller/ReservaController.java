@@ -2,10 +2,13 @@ package pe.vraem.pasajes.reservas.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,9 +23,9 @@ import pe.vraem.pasajes.pagos.repository.PagoRepository;
 import pe.vraem.pasajes.reservas.model.Reserva;
 import pe.vraem.pasajes.reservas.service.AsientoNoDisponibleException;
 import pe.vraem.pasajes.reservas.service.ReservaService;
-import pe.vraem.pasajes.reservas.service.SeleccionAsiento;
 import pe.vraem.pasajes.reservas.service.SeleccionInvalidaException;
 import pe.vraem.pasajes.viajes.model.Asiento;
+import pe.vraem.pasajes.viajes.model.EstadoAsiento;
 import pe.vraem.pasajes.viajes.model.Viaje;
 import pe.vraem.pasajes.viajes.repository.AsientoRepository;
 import pe.vraem.pasajes.viajes.service.ViajeService;
@@ -53,19 +56,44 @@ public class ReservaController {
         return "reservas/mis-reservas";
     }
 
-    @PostMapping("/viajes/{id}/reservas")
-    public String crear(@PathVariable Long id, @ModelAttribute ReservaForm reservaForm, Authentication authentication,
+    @GetMapping("/viajes/{id}/asientos/{asientoId}")
+    public String mostrarConfirmacion(@PathVariable Long id, @PathVariable Long asientoId, Model model,
             RedirectAttributes redirectAttributes) {
         Viaje viaje = viajeService.obtenerDetalle(id);
+        Asiento asiento = asientoRepository.findById(asientoId).orElse(null);
+
+        if (asiento == null || !asiento.getViaje().getId().equals(id) || asiento.getEstado() != EstadoAsiento.LIBRE) {
+            redirectAttributes.addFlashAttribute("errorReserva", "Ese asiento ya no esta disponible.");
+            return "redirect:/viajes/" + id;
+        }
+
+        model.addAttribute("viaje", viaje);
+        model.addAttribute("asiento", asiento);
+        if (!model.containsAttribute("confirmarAsientoForm")) {
+            model.addAttribute("confirmarAsientoForm", new ConfirmarAsientoForm());
+        }
+        return "viajes/confirmar-asiento";
+    }
+
+    @PostMapping("/viajes/{id}/asientos/{asientoId}")
+    public String confirmar(@PathVariable Long id, @PathVariable Long asientoId,
+            @Valid @ModelAttribute("confirmarAsientoForm") ConfirmarAsientoForm form, BindingResult bindingResult,
+            Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
+        Viaje viaje = viajeService.obtenerDetalle(id);
+
+        if (bindingResult.hasErrors()) {
+            Asiento asiento = asientoRepository.findById(asientoId).orElse(null);
+            model.addAttribute("viaje", viaje);
+            model.addAttribute("asiento", asiento);
+            return "viajes/confirmar-asiento";
+        }
+
         Usuario comprador = usuarioActualProvider.obtener(authentication);
 
-        List<SeleccionAsiento> seleccion = reservaForm.getAsientos().stream()
-                .filter(AsientoSeleccionDTO::isSeleccionado)
-                .map(dto -> new SeleccionAsiento(dto.getAsientoId(), dto.getNombrePasajero(), dto.getDniPasajero()))
-                .toList();
-
         try {
-            Reserva reserva = reservaService.crearReserva(viaje, comprador, seleccion);
+            Reserva reserva = reservaService.crearReserva(viaje, comprador, asientoId, form.getNombrePasajero(),
+                    form.getDniPasajero());
+            redirectAttributes.addFlashAttribute("exito", "Asiento reservado. Completa el pago para confirmar tu boleto.");
             return "redirect:/reservas/" + reserva.getId() + "/pago";
         } catch (SeleccionInvalidaException | AsientoNoDisponibleException ex) {
             redirectAttributes.addFlashAttribute("errorReserva", ex.getMessage());

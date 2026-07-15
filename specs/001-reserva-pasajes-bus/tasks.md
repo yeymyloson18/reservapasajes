@@ -167,6 +167,22 @@ description: "Task list for Reserva de Pasajes de Bus VRAEM"
 
 ---
 
+## Phase 8: Segunda revisión — módulo visual de camioneta y gestión admin completa (2026-07-15)
+
+**Purpose**: El usuario reportó 7 puntos adicionales tras probar el sistema de nuevo, incluyendo dos reversiones explícitas de decisiones de la Phase 7 (selección múltiple → un asiento por clic; capacidad configurable → fija en 4). Se investigaron los reportes verificables antes de tocar código (ver plan aprobado vía `/plan`): el flujo de pago ya funcionaba (verificado en vivo), y el reporte de "viaje nuevo no aparece" no se pudo reproducir con dos cuentas de pasajero independientes — se encontró en su lugar un gap real no reportado: no existía ningún enlace en la UI para editar/eliminar viajes ya creados.
+
+- [X] T059 Capacidad fija de 4 asientos: se elimina `numeroAsientos` de `Viaje` (entidad, form, service, controller, vista), se agrega `ViajeService.CAPACIDAD_ASIENTOS = 4` y `Asiento.esAdelante()` (numero 1 = adelante, 2-4 = atras); se elimina `ajustarNumeroDeAsientos(...)` y la regla FR-015 de rechazo por reduccion (FR-005, FR-014, FR-015).
+- [X] T060 Modulo visual de camioneta: reescritura de `viajes/detalle.html` (caja "Chofer" + asiento adelante + fila de 3 asientos atras, verde=LIBRE/gris=OCUPADO); nueva pantalla `viajes/confirmar-asiento.html` con formulario de nombre/DNI y `confirm()` antes de reservar (FR-005, FR-006).
+- [X] T061 Flujo de reserva de un solo asiento: `GET`/`POST /viajes/{id}/asientos/{asientoId}` en `ReservaController`; `ReservaService.crearReserva(...)` cambia de `List<SeleccionAsiento>` a un unico `asientoId+nombrePasajero+dniPasajero` (monto = precio del viaje); se eliminan `ReservaForm`, `AsientoSeleccionDTO`, `SeleccionAsiento`, reemplazados por `ConfirmarAsientoForm` (FR-006, FR-007, FR-008 sin cambios).
+- [X] T062 [P] Panel admin — Gestionar viajes: `GET /admin/viajes` en `AdminViajeController`, vista `admin/gestionar-viajes.html` (editar/eliminar/ver reservas por fila); mensajes de exito tras crear/editar/eliminar viaje; validacion `@FutureOrPresent` en la fecha (FR-014, FR-023, FR-025).
+- [X] T063 [P] Panel admin — Usuarios: nuevo `AdminUsuarioController` + `admin/usuarios.html` (DNI, nombre, email, rol) (FR-024).
+- [X] T064 [P] Panel admin — Reservas enriquecidas: `AdminReservaController` con filtro `?viajeId=`; `admin/listado-reservas.html` agrega DNI del pasajero y email del comprador (FR-017, FR-023).
+- [X] T065 [P] Navegacion y mensajes: fragmento `fragments/layout.html :: pasos(pasoActual)` (1.Viajes→2.Asiento→3.Pago→4.Boleta) en las 4 pantallas del flujo de compra; enlaces "volver" en pantallas admin sin salida previa; mensajes de exito tras reservar, pagar y confirmar pago (FR-025).
+- [X] T066 Actualizar tests afectados por el cambio de modelo: `ReservaServiceTest`, `ReservaControllerIT` (reescritos para un asiento; incluye la prueba de concurrencia contra el nuevo endpoint), `ViajeServiceTest`, `AdminViajeControllerIT` (sin `numeroAsientos`); nuevo `AdminUsuarioControllerIT`. Bug encontrado y corregido durante la verificacion: `Collectors.toMap` con valores `null` lanzaba `NullPointerException` en `AdminReservaController` (reservas sin asiento vinculado en datos de prueba); reemplazado por un `HashMap` construido manualmente.
+- [X] T067 Actualizar `spec.md` (Clarifications de la segunda revision, historias de usuario, FR-005/006/007/014/015 reescritos, FR-023/024/025 nuevos, Key Entities, Assumptions) y `data-model.md` (capacidad fija, semantica adelante/atras, Reserva 1:1 con Asiento) para reflejar las decisiones de esta fase.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

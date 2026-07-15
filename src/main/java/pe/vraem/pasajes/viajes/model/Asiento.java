@@ -103,4 +103,12 @@ public class Asiento {
     public String getDniPasajero() {
         return dniPasajero;
     }
+
+    /**
+     * La camioneta tiene 4 asientos fijos para pasajeros: el asiento 1 va
+     * adelante (junto al chofer) y los asientos 2-4 van juntos atras.
+     */
+    public boolean esAdelante() {
+        return numero == 1;
+    }
 }
