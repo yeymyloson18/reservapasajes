@@ -8,6 +8,14 @@
 
 **Input**: User description: "Sistema de reserva de pasajes de bus para rutas Ayacucho - VRAEM (San Francisco, Sivia, Santa Rosa, Kimbiri, Pichari). Usuario pasajero puede: registrarse e iniciar sesión (email y contraseña); ver lista de viajes disponibles (ruta, fecha, hora, precio); elegir un viaje y ver un mapa simple de asientos (libre/ocupado); seleccionar uno o más asientos e ingresar nombre y DNI del pasajero; pagar el total (mediante yape o plin); ver su boleto con código de reserva único. Administrador puede: iniciar sesión con rol ADMIN; crear, editar y eliminar viajes (ruta, fecha, hora, bus, precio, número de asientos); ver lista de reservas y su estado (pendiente/pagado). Datos: Usuario (dni, nombre, email, contraseña encriptada, rol), Camioneta (id, placa, ruta), Viaje (id, origen, destino, fecha, hora, camioneta, precio), Asiento (id, viaje, número, estado libre/reservado/pagado), Reserva (id, usuario, viaje, asientos elegidos, monto total, estado, fecha), Pago (id, reserva, método, estado, referencia). Reglas: un asiento no puede ser reservado por dos personas al mismo tiempo; una reserva sin pago confirmado en cierto tiempo debe liberar el asiento; solo el ADMIN puede crear o modificar viajes."
 
+## Clarifications
+
+### Session 2026-07-15
+
+- Q: ¿El DNI ingresado (por el usuario al registrarse o por cada pasajero al reservar) debe validarse solo por formato, o el sistema debe verificarlo contra un servicio externo (p. ej. RENIEC)? → A: Solo validación de formato (8 dígitos numéricos), sin verificación externa.
+- Q: ¿Un pasajero puede ver el detalle (nombre/DNI) de reservas de otros pasajeros, o solo de las suyas propias? → A: Un pasajero solo ve el detalle (incluido el DNI) de sus propias reservas; el ADMIN ve todas.
+- Q: ¿El DNI debe ser único entre cuentas de Usuario (como el email), o no tiene restricción de unicidad? → A: El DNI MUST ser único entre cuentas de Usuario.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Comprar un pasaje de principio a fin (Priority: P1)
@@ -69,17 +77,19 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - ¿Qué ocurre si un pasajero intenta pagar asientos que ya no están disponibles (por haber expirado su selección)? El sistema rechaza el pago y solicita reiniciar la selección de asientos.
 - ¿Qué ocurre si se ingresa un DNI o email con formato inválido durante el registro? El sistema rechaza el registro e indica el campo inválido.
 - ¿Qué ocurre si un pasajero intenta registrarse con un email ya usado por otra cuenta? El sistema rechaza el registro e indica que el email ya está en uso.
+- ¿Qué ocurre si un pasajero intenta registrarse con un DNI ya usado por otra cuenta? El sistema rechaza el registro e indica que el DNI ya está en uso.
+- ¿Qué ocurre si un pasajero intenta ver el detalle de una reserva que no le pertenece? El sistema deniega el acceso.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: El sistema MUST permitir que un visitante se registre como pasajero indicando DNI, nombre, email y contraseña, y MUST rechazar registros con email ya existente o con DNI/email de formato inválido.
+- **FR-001**: El sistema MUST permitir que un visitante se registre como pasajero indicando DNI, nombre, email y contraseña, y MUST rechazar registros con email o DNI ya existente en otra cuenta, o con DNI/email de formato inválido. El DNI MUST validarse únicamente por formato (8 dígitos numéricos); el sistema no verifica el DNI contra ningún servicio externo (p. ej. RENIEC).
 - **FR-002**: El sistema MUST almacenar la contraseña de cada usuario de forma encriptada (no en texto plano) y MUST permitir iniciar sesión con email y contraseña.
 - **FR-003**: El sistema MUST distinguir entre usuarios con rol PASAJERO y rol ADMIN, y MUST restringir las acciones de gestión de viajes exclusivamente al rol ADMIN.
 - **FR-004**: El sistema MUST mostrar a los pasajeros autenticados la lista de viajes disponibles con ruta (origen/destino), fecha, hora y precio.
 - **FR-005**: El sistema MUST mostrar, para un viaje elegido, un mapa simple de asientos indicando cuáles están libres y cuáles ocupados (reservados o pagados).
-- **FR-006**: El sistema MUST permitir a un pasajero seleccionar uno o más asientos libres de un viaje e ingresar el nombre y DNI del pasajero que ocupará cada asiento seleccionado.
+- **FR-006**: El sistema MUST permitir a un pasajero seleccionar uno o más asientos libres de un viaje e ingresar el nombre y DNI del pasajero que ocupará cada asiento seleccionado; el DNI de cada pasajero MUST validarse solo por formato (8 dígitos numéricos), sin verificación externa.
 - **FR-007**: El sistema MUST calcular el monto total a pagar como el precio del viaje multiplicado por el número de asientos seleccionados.
 - **FR-008**: El sistema MUST impedir que un mismo asiento sea asignado a más de una reserva activa (pendiente o pagada) al mismo tiempo, incluso ante solicitudes simultáneas.
 - **FR-009**: El sistema MUST permitir al pasajero pagar el monto total indicando el método (Yape o Plin) y una referencia/número de operación, y MUST registrar el pago asociado a la reserva.
@@ -92,10 +102,11 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - **FR-016**: El sistema MUST permitir que el rol ADMIN elimine un viaje únicamente cuando no tenga reservas pagadas asociadas.
 - **FR-017**: El sistema MUST permitir que el rol ADMIN visualice el listado de todas las reservas junto con su estado (pendiente/pagado/expirada) y datos principales (viaje, pasajero(s), monto, fecha).
 - **FR-018**: El sistema MUST restringir el acceso a cualquier funcionalidad de creación, edición o eliminación de viajes a usuarios que no tengan rol ADMIN.
+- **FR-019**: El sistema MUST restringir la visualización del detalle de una reserva (incluyendo nombre y DNI de los pasajeros) al usuario que la creó y al rol ADMIN; un pasajero MUST NOT poder ver el detalle de reservas hechas por otros usuarios.
 
 ### Key Entities
 
-- **Usuario**: Persona que usa el sistema; atributos: DNI, nombre, email (único), contraseña (almacenada de forma encriptada), rol (PASAJERO o ADMIN).
+- **Usuario**: Persona que usa el sistema; atributos: DNI (único, 8 dígitos, solo validado por formato), nombre, email (único), contraseña (almacenada de forma encriptada), rol (PASAJERO o ADMIN).
 - **Camioneta (vehículo)**: Unidad de transporte asignada a los viajes; atributos: identificador, placa, ruta que cubre habitualmente.
 - **Viaje**: Salida programada entre dos puntos del recorrido Ayacucho-VRAEM; atributos: origen, destino, fecha, hora, camioneta asignada, precio por asiento, número total de asientos. Se relaciona con múltiples Asientos y puede tener múltiples Reservas.
 - **Asiento**: Unidad reservable dentro de un viaje; atributos: número, estado (libre/reservado/pagado); pertenece a un único Viaje.
