@@ -55,12 +55,16 @@ public class Viaje {
     @Column(name = "numero_asientos", nullable = false)
     private int numeroAsientos;
 
+    @NotBlank
+    @Column(nullable = false, length = 150)
+    private String chofer;
+
     protected Viaje() {
         // JPA
     }
 
     public Viaje(String origen, String destino, LocalDate fecha, LocalTime hora, Camioneta camioneta,
-            BigDecimal precio, int numeroAsientos) {
+            BigDecimal precio, int numeroAsientos, String chofer) {
         this.origen = origen;
         this.destino = destino;
         this.fecha = fecha;
@@ -68,6 +72,7 @@ public class Viaje {
         this.camioneta = camioneta;
         this.precio = precio;
         this.numeroAsientos = numeroAsientos;
+        this.chofer = chofer;
     }
 
     public Long getId() {
@@ -128,5 +133,13 @@ public class Viaje {
 
     public void setNumeroAsientos(int numeroAsientos) {
         this.numeroAsientos = numeroAsientos;
+    }
+
+    public String getChofer() {
+        return chofer;
+    }
+
+    public void setChofer(String chofer) {
+        this.chofer = chofer;
     }
 }

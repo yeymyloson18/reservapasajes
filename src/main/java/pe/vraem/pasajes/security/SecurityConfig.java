@@ -29,15 +29,18 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+            RolBasedAuthenticationSuccessHandler successHandler) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/registro", "/login", "/webjars/**", "/css/**", "/error").permitAll()
+                        .requestMatchers("/", "/registro", "/login", "/recuperar-password", "/webjars/**", "/css/**",
+                                "/error")
+                        .permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/viajes", true)
+                        .successHandler(successHandler)
                         .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/logout")

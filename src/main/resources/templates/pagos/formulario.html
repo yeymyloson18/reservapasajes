@@ -7,6 +7,8 @@
     <nav th:replace="~{fragments/layout :: nav}"></nav>
 
     <main class="container" style="max-width: 480px;">
+        <p class="mb-2"><a th:href="@{/reservas/{id}(id=${reserva.id})}">&larr; Volver a la reserva</a></p>
+
         <h1 class="h3 mb-1">Pagar reserva</h1>
         <p class="text-muted mb-4">
             Monto a pagar: S/ <strong th:text="${reserva.montoTotal}">0.00</strong>

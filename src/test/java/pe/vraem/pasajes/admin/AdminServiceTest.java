@@ -42,9 +42,9 @@ class AdminServiceTest {
     void calculaElResumenDeViajesActivosYReservasPendientes() {
         Camioneta camioneta = new Camioneta("ABC-123", "Ayacucho - Kimbiri");
         Viaje viaje1 = new Viaje("Ayacucho", "Kimbiri", LocalDate.now().plusDays(1), LocalTime.of(8, 0), camioneta,
-                new BigDecimal("50.00"), 10);
+                new BigDecimal("50.00"), 10, "Carlos Mamani");
         Viaje viaje2 = new Viaje("Ayacucho", "Pichari", LocalDate.now().plusDays(2), LocalTime.of(9, 0), camioneta,
-                new BigDecimal("55.00"), 10);
+                new BigDecimal("55.00"), 10, "Carlos Mamani");
 
         when(viajeService.listarDisponibles()).thenReturn(List.of(viaje1, viaje2));
         when(reservaRepository.countByEstado(EstadoReserva.PENDIENTE)).thenReturn(4L);

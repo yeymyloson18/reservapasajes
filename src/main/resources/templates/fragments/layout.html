@@ -41,8 +41,11 @@
         </div>
     </nav>
 
-    <footer th:fragment="footer" class="text-center text-muted py-4 mt-5 border-top">
-        <small>Pasajes VRAEM &mdash; Ayacucho / San Francisco / Sivia / Santa Rosa / Kimbiri / Pichari</small>
-    </footer>
+    <th:block th:fragment="footer">
+        <footer class="text-center text-muted py-4 mt-5 border-top">
+            <small>Pasajes VRAEM &mdash; Ayacucho / San Francisco / Sivia / Santa Rosa / Kimbiri / Pichari</small>
+        </footer>
+        <script th:src="@{/webjars/bootstrap/5.3.3/js/bootstrap.bundle.min.js}"></script>
+    </th:block>
 </body>
 </html>

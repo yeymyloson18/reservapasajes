@@ -58,7 +58,7 @@ class ReservaServiceTest {
 
         Camioneta camioneta = new Camioneta("ABC-123", "Ayacucho - Kimbiri");
         viaje = new Viaje("Ayacucho", "Kimbiri", LocalDate.now().plusDays(1), LocalTime.of(8, 0), camioneta,
-                new BigDecimal("50.00"), 20);
+                new BigDecimal("50.00"), 20, "Carlos Mamani");
         ReflectionTestUtils.setField(viaje, "id", 10L);
     }
 

@@ -55,7 +55,7 @@ class ViajeServiceTest {
 
     private Viaje viajeConId(long id, int numeroAsientos) {
         Viaje viaje = new Viaje("Ayacucho", "Kimbiri", LocalDate.now().plusDays(1), LocalTime.of(8, 0), camioneta,
-                new BigDecimal("50.00"), numeroAsientos);
+                new BigDecimal("50.00"), numeroAsientos, "Carlos Mamani");
         ReflectionTestUtils.setField(viaje, "id", id);
         return viaje;
     }
@@ -70,7 +70,7 @@ class ViajeServiceTest {
         });
 
         viajeService.crearViaje("Ayacucho", "Kimbiri", LocalDate.now().plusDays(1), LocalTime.of(8, 0), camioneta,
-                new BigDecimal("50.00"), 5);
+                new BigDecimal("50.00"), 5, "Carlos Mamani");
 
         ArgumentCaptor<List<Asiento>> captor = ArgumentCaptor.forClass(List.class);
         verify(asientoRepository).saveAll(captor.capture());
@@ -95,7 +95,7 @@ class ViajeServiceTest {
         when(asientoRepository.findAllByViajeOrderByNumeroAsc(viaje)).thenReturn(List.of(libre, reservado, pagado));
 
         assertThatThrownBy(() -> viajeService.editarViaje(1L, "Ayacucho", "Kimbiri", viaje.getFecha(), viaje.getHora(),
-                camioneta, new BigDecimal("50.00"), 1))
+                camioneta, new BigDecimal("50.00"), 1, "Carlos Mamani"))
                 .isInstanceOf(ViajeInvalidoException.class);
 
         verify(viajeRepository, never()).save(any(Viaje.class));

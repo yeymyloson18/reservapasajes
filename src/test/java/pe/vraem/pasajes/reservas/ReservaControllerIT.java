@@ -68,7 +68,7 @@ class ReservaControllerIT {
     private Viaje crearViajeConAsientos(int numeroAsientos) {
         Camioneta camioneta = camionetaRepository.save(new Camioneta("XYZ-" + PLACA_SEQ.incrementAndGet(), "Ayacucho - Sivia"));
         Viaje viaje = viajeRepository.save(new Viaje("Ayacucho", "Sivia", LocalDate.now().plusDays(2), LocalTime.of(9, 0),
-                camioneta, new BigDecimal("40.00"), numeroAsientos));
+                camioneta, new BigDecimal("40.00"), numeroAsientos, "Carlos Mamani"));
         for (int i = 1; i <= numeroAsientos; i++) {
             asientoRepository.save(new Asiento(viaje, i));
         }

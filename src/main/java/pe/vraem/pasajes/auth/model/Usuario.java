@@ -77,6 +77,10 @@ public class Usuario {
         return passwordHash;
     }
 
+    public void actualizarPasswordHash(String nuevoPasswordHash) {
+        this.passwordHash = nuevoPasswordHash;
+    }
+
     public Rol getRol() {
         return rol;
     }

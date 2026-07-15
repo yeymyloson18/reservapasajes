@@ -64,7 +64,8 @@ class AdminViajeControllerIT {
                         .param("placaCamioneta", "ADM-001")
                         .param("rutaCamioneta", "Ayacucho - Sivia")
                         .param("precio", "45.00")
-                        .param("numeroAsientos", "10"))
+                        .param("numeroAsientos", "10")
+                        .param("chofer", "Carlos Mamani"))
                 .andExpect(status().is3xxRedirection());
 
         Camioneta camioneta = camionetaRepository.findByPlaca("ADM-001").orElseThrow();
@@ -83,7 +84,8 @@ class AdminViajeControllerIT {
                         .param("placaCamioneta", "ADM-001")
                         .param("rutaCamioneta", "Ayacucho - Sivia")
                         .param("precio", "50.00")
-                        .param("numeroAsientos", "10"))
+                        .param("numeroAsientos", "10")
+                        .param("chofer", "Carlos Mamani"))
                 .andExpect(status().is3xxRedirection());
 
         Viaje viajeEditado = viajeRepository.findById(viaje.getId()).orElseThrow();

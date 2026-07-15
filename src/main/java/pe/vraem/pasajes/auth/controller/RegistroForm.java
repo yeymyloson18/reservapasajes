@@ -3,7 +3,6 @@ package pe.vraem.pasajes.auth.controller;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 
 public class RegistroForm {
 
@@ -12,6 +11,7 @@ public class RegistroForm {
     private String dni;
 
     @NotBlank(message = "El nombre es obligatorio")
+    @Pattern(regexp = "[\\p{L} ]{2,}", message = "El nombre debe tener solo letras y espacios, minimo 2 caracteres")
     private String nombre;
 
     @NotBlank(message = "El email es obligatorio")
@@ -19,7 +19,8 @@ public class RegistroForm {
     private String email;
 
     @NotBlank(message = "La contrasena es obligatoria")
-    @Size(min = 8, message = "La contrasena debe tener al menos 8 caracteres")
+    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[0-9]).{8,}$",
+            message = "La contrasena debe tener minimo 8 caracteres, al menos una mayuscula y un numero")
     private String password;
 
     public String getDni() {

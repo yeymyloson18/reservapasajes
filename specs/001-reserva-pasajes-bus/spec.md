@@ -16,6 +16,15 @@
 - Q: ¿Un pasajero puede ver el detalle (nombre/DNI) de reservas de otros pasajeros, o solo de las suyas propias? → A: Un pasajero solo ve el detalle (incluido el DNI) de sus propias reservas; el ADMIN ve todas.
 - Q: ¿El DNI debe ser único entre cuentas de Usuario (como el email), o no tiene restricción de unicidad? → A: El DNI MUST ser único entre cuentas de Usuario.
 
+### Session 2026-07-15 (revisión post-implementación)
+
+Tras probar el sistema implementado, se identificaron vacíos de la spec original y se resolvieron las siguientes decisiones antes de corregir el código:
+
+- Q: ¿La selección de asientos debe seguir permitiendo elegir varios asientos en una sola reserva, o cambiar a un flujo de un asiento a la vez? → A: Se mantiene la selección múltiple (FR-006/FR-007 sin cambios); se añade una confirmación explícita antes de enviar la reserva.
+- Q: ¿El pago puede cubrir solo un asiento de la reserva (pago parcial) o siempre el monto total? → A: El pago sigue cubriendo siempre el monto total de la reserva completa (sin cambios al modelo Pago↔Reserva 1 a 1).
+- Q: ¿"Chofer" y "Ruta" deben ser entidades nuevas con CRUD propio en el panel ADMIN? → A: No. "Chofer" se agrega como un campo de texto simple del Viaje (sin gestión propia). "Ruta" sigue siendo el origen/destino ya existente de cada Viaje; no se crea una entidad `Ruta` separada.
+- Q: ¿Cómo se entrega la contraseña temporal al recuperar acceso, sin servidor de correo? → A: Se muestra una única vez en pantalla tras enviar el formulario de recuperación.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Comprar un pasaje de principio a fin (Priority: P1)
@@ -79,17 +88,20 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - ¿Qué ocurre si un pasajero intenta registrarse con un email ya usado por otra cuenta? El sistema rechaza el registro e indica que el email ya está en uso.
 - ¿Qué ocurre si un pasajero intenta registrarse con un DNI ya usado por otra cuenta? El sistema rechaza el registro e indica que el DNI ya está en uso.
 - ¿Qué ocurre si un pasajero intenta ver el detalle de una reserva que no le pertenece? El sistema deniega el acceso.
+- ¿Qué ocurre si el nombre ingresado en el registro contiene números o símbolos, o la contraseña no cumple la complejidad mínima? El sistema rechaza el registro e indica el campo inválido.
+- ¿Qué ocurre si un viaje ya no tiene asientos libres? El listado de viajes lo muestra como "COMPLETO" y no permite entrar a seleccionar asientos.
+- ¿Qué ocurre si un pasajero pide recuperar su contraseña con un email que no existe? El sistema indica que no existe una cuenta con ese email, sin generar ninguna contraseña.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: El sistema MUST permitir que un visitante se registre como pasajero indicando DNI, nombre, email y contraseña, y MUST rechazar registros con email o DNI ya existente en otra cuenta, o con DNI/email de formato inválido. El DNI MUST validarse únicamente por formato (8 dígitos numéricos); el sistema no verifica el DNI contra ningún servicio externo (p. ej. RENIEC).
+- **FR-001**: El sistema MUST permitir que un visitante se registre como pasajero indicando DNI, nombre, email y contraseña, y MUST rechazar registros con email o DNI ya existente en otra cuenta, o con DNI/email de formato inválido. El DNI MUST validarse únicamente por formato (8 dígitos numéricos); el sistema no verifica el DNI contra ningún servicio externo (p. ej. RENIEC). El nombre MUST contener solo letras y espacios, con un mínimo de 2 caracteres. La contraseña MUST tener un mínimo de 8 caracteres, con al menos una letra mayúscula y un número.
 - **FR-002**: El sistema MUST almacenar la contraseña de cada usuario de forma encriptada (no en texto plano) y MUST permitir iniciar sesión con email y contraseña.
 - **FR-003**: El sistema MUST distinguir entre usuarios con rol PASAJERO y rol ADMIN, y MUST restringir las acciones de gestión de viajes exclusivamente al rol ADMIN.
-- **FR-004**: El sistema MUST mostrar a los pasajeros autenticados la lista de viajes disponibles con ruta (origen/destino), fecha, hora y precio.
+- **FR-004**: El sistema MUST mostrar a los pasajeros autenticados la lista de viajes disponibles con ruta (origen/destino), chofer, fecha, hora y precio. Un viaje sin asientos libres MUST mostrarse como "COMPLETO", sin permitir continuar a la selección de asientos.
 - **FR-005**: El sistema MUST mostrar, para un viaje elegido, un mapa simple de asientos indicando cuáles están libres y cuáles ocupados (reservados o pagados).
-- **FR-006**: El sistema MUST permitir a un pasajero seleccionar uno o más asientos libres de un viaje e ingresar el nombre y DNI del pasajero que ocupará cada asiento seleccionado; el DNI de cada pasajero MUST validarse solo por formato (8 dígitos numéricos), sin verificación externa.
+- **FR-006**: El sistema MUST permitir a un pasajero seleccionar uno o más asientos libres de un viaje e ingresar el nombre y DNI del pasajero que ocupará cada asiento seleccionado; el DNI de cada pasajero MUST validarse solo por formato (8 dígitos numéricos), sin verificación externa. Antes de enviar la reserva, el sistema MUST pedir una confirmación explícita mostrando la cantidad de asientos elegidos y el monto total.
 - **FR-007**: El sistema MUST calcular el monto total a pagar como el precio del viaje multiplicado por el número de asientos seleccionados.
 - **FR-008**: El sistema MUST impedir que un mismo asiento sea asignado a más de una reserva activa (pendiente o pagada) al mismo tiempo, incluso ante solicitudes simultáneas.
 - **FR-009**: El sistema MUST permitir al pasajero pagar el monto total indicando el método (Yape o Plin) y una referencia/número de operación, y MUST registrar el pago asociado a la reserva.
@@ -97,18 +109,21 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - **FR-011**: El sistema MUST liberar automáticamente los asientos de una reserva "pendiente" cuyo pago no fue confirmado dentro del plazo definido (ver Assumptions), devolviéndolos al estado "libre" y marcando la reserva como expirada.
 - **FR-012**: El sistema MUST cambiar el estado de la reserva y de sus asientos a "pagado" una vez confirmado el pago correspondiente.
 - **FR-013**: El sistema MUST generar un código de reserva único para cada reserva y MUST permitir al pasajero consultar su boleto (ruta, fecha, hora, asientos, pasajeros, código de reserva) una vez pagada.
-- **FR-014**: El sistema MUST permitir que el rol ADMIN cree viajes indicando ruta (origen/destino), fecha, hora, camioneta (bus) y precio, y MUST generar automáticamente los asientos del viaje según el número de asientos configurado.
+- **FR-014**: El sistema MUST permitir que el rol ADMIN cree viajes indicando ruta (origen/destino), fecha, hora, camioneta (bus), chofer y precio, y MUST generar automáticamente los asientos del viaje según el número de asientos configurado.
 - **FR-015**: El sistema MUST permitir que el rol ADMIN edite los datos de un viaje, salvo reducir el número de asientos por debajo de la cantidad ya reservada o pagada, lo cual MUST rechazar.
 - **FR-016**: El sistema MUST permitir que el rol ADMIN elimine un viaje únicamente cuando no tenga reservas pagadas asociadas.
 - **FR-017**: El sistema MUST permitir que el rol ADMIN visualice el listado de todas las reservas junto con su estado (pendiente/pagado/expirada) y datos principales (viaje, pasajero(s), monto, fecha).
 - **FR-018**: El sistema MUST restringir el acceso a cualquier funcionalidad de creación, edición o eliminación de viajes a usuarios que no tengan rol ADMIN.
 - **FR-019**: El sistema MUST restringir la visualización del detalle de una reserva (incluyendo nombre y DNI de los pasajeros) al usuario que la creó y al rol ADMIN; un pasajero MUST NOT poder ver el detalle de reservas hechas por otros usuarios.
+- **FR-020**: El sistema MUST permitir que cualquier usuario recupere el acceso a su cuenta indicando su email; si el email existe, MUST generar una contraseña temporal, guardarla de forma encriptada, y mostrarla una única vez en pantalla (no hay envío de correo real en esta versión).
+- **FR-021**: Tras iniciar sesión, el sistema MUST dirigir al usuario con rol ADMIN a su panel de administración y al usuario con rol PASAJERO a la lista de viajes, en vez de una única página de bienvenida para todos los roles.
+- **FR-022**: El sistema MUST ofrecer, en toda pantalla autenticada, un control visible y funcional para cerrar sesión.
 
 ### Key Entities
 
 - **Usuario**: Persona que usa el sistema; atributos: DNI (único, 8 dígitos, solo validado por formato), nombre, email (único), contraseña (almacenada de forma encriptada), rol (PASAJERO o ADMIN).
 - **Camioneta (vehículo, también referido como "bus")**: Unidad de transporte asignada a los viajes; atributos: identificador, placa, ruta que cubre habitualmente. "Bus" y "Camioneta" se usan como sinónimos en este documento; la entidad canónica es `Camioneta`.
-- **Viaje**: Salida programada entre dos puntos del recorrido Ayacucho-VRAEM; atributos: origen, destino, fecha, hora, camioneta asignada, precio por asiento, número total de asientos. Se relaciona con múltiples Asientos y puede tener múltiples Reservas.
+- **Viaje**: Salida programada entre dos puntos del recorrido Ayacucho-VRAEM; atributos: origen, destino, fecha, hora, camioneta asignada, chofer (nombre, campo de texto simple), precio por asiento, número total de asientos. Se relaciona con múltiples Asientos y puede tener múltiples Reservas.
 - **Asiento**: Unidad reservable dentro de un viaje; atributos: número, estado (libre/reservado/pagado); pertenece a un único Viaje.
 - **Reserva**: Solicitud de uno o más asientos hecha por un Usuario para un Viaje; atributos: usuario comprador, viaje, asientos elegidos (cada uno con nombre y DNI del pasajero que viajará), monto total, estado (pendiente/pagado/expirada), fecha de creación. Se relaciona con un Pago.
 - **Pago**: Registro del intento de cobro de una Reserva; atributos: método (Yape o Plin), estado, referencia/número de operación; pertenece a una única Reserva.
@@ -135,3 +150,6 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - **Límite de asientos por reserva**: no hay un tope adicional al de asientos libres disponibles en el viaje; un pasajero puede reservar tantos asientos libres como existan.
 - **Asignación de rol ADMIN**: el rol ADMIN se asigna manualmente (por ejemplo, directamente en la base de datos o por un proceso interno); no existe un flujo de autoregistro para administradores.
 - **Rutas cubiertas**: las rutas del sistema conectan Ayacucho con San Francisco, Sivia, Santa Rosa, Kimbiri y Pichari (VRAEM), pudiendo un viaje tener como origen o destino cualquiera de estos puntos.
+- **Chofer**: se registra como un campo de texto simple del Viaje (nombre del chofer), sin una entidad `Chofer` separada ni gestión propia (alta/edición/eliminación independiente). No se contempla foto ni datos adicionales del chofer en esta versión.
+- **Ruta como entidad**: "ruta" sigue siendo el par origen/destino de cada Viaje; no se crea una entidad `Ruta` con gestión propia. Tampoco se agregan campos de capacidad o foto a `Camioneta`.
+- **Recuperación de contraseña**: dado que no hay servidor de correo (SMTP) configurado, la recuperación de contraseña genera una contraseña temporal y la muestra una única vez en pantalla, en vez de enviarla por email. Esto es una medida simplificada para esta versión, no un mecanismo de recuperación seguro para producción con usuarios reales fuera de un entorno controlado.

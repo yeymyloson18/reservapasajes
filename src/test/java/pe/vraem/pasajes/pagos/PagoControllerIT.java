@@ -63,7 +63,7 @@ class PagoControllerIT {
     void flujoDePagoYConfirmacionMuestraElBoletoCompleto() throws Exception {
         Camioneta camioneta = camionetaRepository.save(new Camioneta("PGO-001", "Ayacucho - Pichari"));
         Viaje viaje = viajeRepository.save(new Viaje("Ayacucho", "Pichari", LocalDate.now().plusDays(3),
-                LocalTime.of(7, 30), camioneta, new BigDecimal("60.00"), 2));
+                LocalTime.of(7, 30), camioneta, new BigDecimal("60.00"), 2, "Carlos Mamani"));
         Asiento asiento = asientoRepository.save(new Asiento(viaje, 1));
 
         Usuario comprador = usuarioRepository.save(new Usuario("45679001", "Ana Quispe", "pago-comprador@example.com",

@@ -58,7 +58,7 @@ class PagoServiceTest {
         Usuario comprador = new Usuario("12345678", "Juan Perez", "juan@example.com", "hash", Rol.PASAJERO);
         Camioneta camioneta = new Camioneta("ABC-123", "Ayacucho - Kimbiri");
         Viaje viaje = new Viaje("Ayacucho", "Kimbiri", LocalDate.now().plusDays(1), LocalTime.of(8, 0), camioneta,
-                new BigDecimal("50.00"), 20);
+                new BigDecimal("50.00"), 20, "Carlos Mamani");
         reserva = new Reserva(comprador, viaje, new BigDecimal("50.00"));
         ReflectionTestUtils.setField(reserva, "id", 1L);
 

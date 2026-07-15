@@ -27,7 +27,10 @@ public class ViajeController {
 
     @GetMapping("/viajes")
     public String listar(Model model) {
-        model.addAttribute("viajes", viajeService.listarDisponibles());
+        List<ViajeConDisponibilidad> viajes = viajeService.listarDisponibles().stream()
+                .map(viaje -> new ViajeConDisponibilidad(viaje, viajeService.contarAsientosLibres(viaje)))
+                .toList();
+        model.addAttribute("viajes", viajes);
         return "viajes/lista";
     }
 

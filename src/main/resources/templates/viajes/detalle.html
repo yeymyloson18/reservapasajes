@@ -7,11 +7,14 @@
     <nav th:replace="~{fragments/layout :: nav}"></nav>
 
     <main class="container" style="max-width: 720px;">
+        <p class="mb-2"><a th:href="@{/viajes}">&larr; Volver a viajes</a></p>
+
         <h1 class="h3 mb-1" th:text="${viaje.origen + ' &rarr; ' + viaje.destino}">Ruta</h1>
         <p class="text-muted mb-4">
             <span th:text="${viaje.fecha}">2026-01-01</span> &middot;
             <span th:text="${viaje.hora}">08:00</span> &middot;
-            S/ <span th:text="${viaje.precio}">0.00</span> por asiento
+            S/ <span th:text="${viaje.precio}">0.00</span> por asiento &middot;
+            Chofer: <span th:text="${viaje.chofer}">Nombre</span>
         </p>
 
         <div th:if="${errorReserva}" class="alert alert-danger" th:text="${errorReserva}"></div>
@@ -22,7 +25,8 @@
             <span class="badge bg-secondary">Ocupado</span>
         </p>
 
-        <form th:action="@{/viajes/{id}/reservas(id=${viaje.id})}" th:object="${reservaForm}" method="post">
+        <form th:action="@{/viajes/{id}/reservas(id=${viaje.id})}" th:object="${reservaForm}" method="post"
+              th:attr="onsubmit=|return confirmarReserva(${viaje.precio})|">
             <div class="row row-cols-3 row-cols-sm-4 row-cols-md-5 g-2 mb-4">
                 <div class="col" th:each="asiento, iter : ${asientos}">
                     <input type="hidden" th:field="*{asientos[__${iter.index}__].asientoId}" />
@@ -57,6 +61,16 @@
             var checkbox = document.querySelectorAll('.asiento-checkbox')[index];
             var datos = document.getElementById('datos-pasajero-' + index);
             datos.classList.toggle('d-none', !checkbox.checked);
+        }
+
+        function confirmarReserva(precioPorAsiento) {
+            var seleccionados = document.querySelectorAll('.asiento-checkbox:checked').length;
+            if (seleccionados === 0) {
+                alert('Selecciona al menos un asiento libre antes de reservar.');
+                return false;
+            }
+            var total = (seleccionados * precioPorAsiento).toFixed(2);
+            return confirm('Deseas reservar ' + seleccionados + ' asiento(s) por un total de S/ ' + total + '?');
         }
     </script>
 

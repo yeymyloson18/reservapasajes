@@ -46,7 +46,7 @@ public class AdminViajeController {
 
         Camioneta camioneta = viajeService.obtenerOCrearCamioneta(form.getPlacaCamioneta(), form.getRutaCamioneta());
         viajeService.crearViaje(form.getOrigen(), form.getDestino(), form.getFecha(), form.getHora(), camioneta,
-                form.getPrecio(), form.getNumeroAsientos());
+                form.getPrecio(), form.getNumeroAsientos(), form.getChofer());
 
         return "redirect:/viajes";
     }
@@ -64,6 +64,7 @@ public class AdminViajeController {
             form.setRutaCamioneta(viaje.getCamioneta().getRuta());
             form.setPrecio(viaje.getPrecio());
             form.setNumeroAsientos(viaje.getNumeroAsientos());
+            form.setChofer(viaje.getChofer());
             model.addAttribute("viajeForm", form);
         }
         model.addAttribute("viajeId", id);
@@ -84,7 +85,7 @@ public class AdminViajeController {
             Camioneta camioneta = viajeService.obtenerOCrearCamioneta(form.getPlacaCamioneta(),
                     form.getRutaCamioneta());
             viajeService.editarViaje(id, form.getOrigen(), form.getDestino(), form.getFecha(), form.getHora(),
-                    camioneta, form.getPrecio(), form.getNumeroAsientos());
+                    camioneta, form.getPrecio(), form.getNumeroAsientos(), form.getChofer());
         } catch (ViajeInvalidoException ex) {
             model.addAttribute("viajeId", id);
             model.addAttribute("modoEdicion", true);

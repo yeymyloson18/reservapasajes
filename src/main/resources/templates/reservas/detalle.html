@@ -7,6 +7,7 @@
     <nav th:replace="~{fragments/layout :: nav}"></nav>
 
     <main class="container" style="max-width: 640px;">
+        <p class="mb-2"><a th:href="@{/reservas}">&larr; Volver a mis reservas</a></p>
 
         <div th:if="${reserva.estado.name() == 'PAGADO'}" class="card border-success mb-4">
             <div class="card-body text-center">

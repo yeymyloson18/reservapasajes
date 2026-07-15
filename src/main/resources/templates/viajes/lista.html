@@ -14,18 +14,25 @@
         </div>
 
         <div class="row g-3">
-            <div class="col-12 col-md-6 col-lg-4" th:each="viaje : ${viajes}">
-                <div class="card h-100">
+            <div class="col-12 col-md-6 col-lg-4" th:each="item : ${viajes}">
+                <div class="card h-100" th:classappend="${item.completo()} ? 'bg-light text-muted' : ''">
                     <div class="card-body">
-                        <h2 class="h5 card-title" th:text="${viaje.origen + ' &rarr; ' + viaje.destino}">Ruta</h2>
+                        <div class="mb-2" style="font-size: 2rem; line-height: 1;">&#128652;</div>
+                        <h2 class="h5 card-title" th:text="${item.viaje().origen + ' &rarr; ' + item.viaje().destino}">Ruta</h2>
                         <p class="card-text mb-1">
-                            <strong>Fecha:</strong> <span th:text="${viaje.fecha}">2026-01-01</span>
-                            &nbsp;<strong>Hora:</strong> <span th:text="${viaje.hora}">08:00</span>
+                            <strong>Chofer:</strong> <span th:text="${item.viaje().chofer}">Nombre</span>
+                        </p>
+                        <p class="card-text mb-1">
+                            <strong>Fecha:</strong> <span th:text="${item.viaje().fecha}">2026-01-01</span>
+                            &nbsp;<strong>Hora:</strong> <span th:text="${item.viaje().hora}">08:00</span>
                         </p>
                         <p class="card-text mb-3">
-                            <strong>Precio:</strong> S/ <span th:text="${viaje.precio}">0.00</span>
+                            <strong>Precio:</strong> S/ <span th:text="${item.viaje().precio}">0.00</span>
                         </p>
-                        <a class="btn btn-primary" th:href="@{/viajes/{id}(id=${viaje.id})}">Ver asientos</a>
+
+                        <a th:unless="${item.completo()}" class="btn btn-primary"
+                           th:href="@{/viajes/{id}(id=${item.viaje().id})}">Ver asientos disponibles</a>
+                        <button th:if="${item.completo()}" class="btn btn-secondary" type="button" disabled>COMPLETO</button>
                     </div>
                 </div>
             </div>

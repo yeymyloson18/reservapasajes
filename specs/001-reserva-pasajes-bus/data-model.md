@@ -42,6 +42,7 @@ Salida programada entre dos puntos del recorrido Ayacucho-VRAEM.
 | camioneta_id | bigint, FK → Camioneta | obligatorio |
 | precio | decimal(10,2) | obligatorio, > 0 |
 | numeroAsientos | int | obligatorio, > 0; genera automáticamente esa cantidad de `Asiento` al crear el viaje. No editable por debajo de la cantidad de asientos ya en estado `RESERVADO`/`PAGADO` (FR-015). |
+| chofer | varchar(150) | obligatorio; nombre del chofer. Campo de texto simple, sin entidad `Chofer` separada (ver Assumptions de spec.md). |
 
 **Relaciones**: 1 Viaje → N Asiento. 1 Viaje → N Reserva.
 

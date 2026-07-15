@@ -30,6 +30,7 @@
             <div class="mb-3">
                 <label class="form-label" for="password">Contrasena</label>
                 <input type="password" class="form-control" id="password" th:field="*{password}" />
+                <div class="form-text">Minimo 8 caracteres, con al menos una mayuscula y un numero.</div>
                 <div class="text-danger small" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
             </div>
             <button type="submit" class="btn btn-primary w-100">Registrarme</button>

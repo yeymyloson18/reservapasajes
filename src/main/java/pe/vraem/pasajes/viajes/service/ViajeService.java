@@ -60,12 +60,22 @@ public class ViajeService {
     }
 
     /**
+     * Cuenta los asientos libres de un viaje, para saber si esta "completo" (sin
+     * asientos disponibles) al listarlo.
+     */
+    @Transactional(readOnly = true)
+    public long contarAsientosLibres(Viaje viaje) {
+        return asientoRepository.countByViajeAndEstadoIn(viaje, List.of(EstadoAsiento.LIBRE));
+    }
+
+    /**
      * Crea un viaje y genera automaticamente sus asientos (FR-014).
      */
     @Transactional
     public Viaje crearViaje(String origen, String destino, LocalDate fecha, LocalTime hora, Camioneta camioneta,
-            BigDecimal precio, int numeroAsientos) {
-        Viaje viaje = viajeRepository.save(new Viaje(origen, destino, fecha, hora, camioneta, precio, numeroAsientos));
+            BigDecimal precio, int numeroAsientos, String chofer) {
+        Viaje viaje = viajeRepository
+                .save(new Viaje(origen, destino, fecha, hora, camioneta, precio, numeroAsientos, chofer));
 
         List<Asiento> asientos = new ArrayList<>();
         for (int numero = 1; numero <= numeroAsientos; numero++) {
@@ -83,7 +93,7 @@ public class ViajeService {
      */
     @Transactional
     public Viaje editarViaje(Long id, String origen, String destino, LocalDate fecha, LocalTime hora,
-            Camioneta camioneta, BigDecimal precio, int numeroAsientos) {
+            Camioneta camioneta, BigDecimal precio, int numeroAsientos, String chofer) {
         Viaje viaje = obtenerDetalle(id);
 
         ajustarNumeroDeAsientos(viaje, numeroAsientos);
@@ -95,6 +105,7 @@ public class ViajeService {
         viaje.setCamioneta(camioneta);
         viaje.setPrecio(precio);
         viaje.setNumeroAsientos(numeroAsientos);
+        viaje.setChofer(chofer);
 
         return viajeRepository.save(viaje);
     }

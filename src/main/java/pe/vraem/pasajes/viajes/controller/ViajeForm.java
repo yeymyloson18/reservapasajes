@@ -34,6 +34,9 @@ public class ViajeForm {
     @Positive(message = "El numero de asientos debe ser mayor a cero")
     private int numeroAsientos;
 
+    @NotBlank(message = "El nombre del chofer es obligatorio")
+    private String chofer;
+
     public String getOrigen() {
         return origen;
     }
@@ -96,5 +99,13 @@ public class ViajeForm {
 
     public void setNumeroAsientos(int numeroAsientos) {
         this.numeroAsientos = numeroAsientos;
+    }
+
+    public String getChofer() {
+        return chofer;
+    }
+
+    public void setChofer(String chofer) {
+        this.chofer = chofer;
     }
 }

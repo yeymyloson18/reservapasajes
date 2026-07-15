@@ -54,6 +54,11 @@
                     <input type="number" class="form-control" id="numeroAsientos" th:field="*{numeroAsientos}" />
                     <div class="text-danger small" th:if="${#fields.hasErrors('numeroAsientos')}" th:errors="*{numeroAsientos}"></div>
                 </div>
+                <div class="col-6">
+                    <label class="form-label" for="chofer">Chofer</label>
+                    <input type="text" class="form-control" id="chofer" th:field="*{chofer}" />
+                    <div class="text-danger small" th:if="${#fields.hasErrors('chofer')}" th:errors="*{chofer}"></div>
+                </div>
             </div>
 
             <button type="submit" class="btn btn-primary mt-4">

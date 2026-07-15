@@ -150,6 +150,23 @@ description: "Task list for Reserva de Pasajes de Bus VRAEM"
 
 ---
 
+## Phase 7: Correcciones post-revisión del usuario (2026-07-15)
+
+**Purpose**: El usuario probó el sistema desplegado y reportó 6 problemas (A-F). Diagnóstico verificado contra el código y en caliente antes de corregir; ver historial de conversación para el diagnóstico completo. Se confirmaron 4 decisiones de alcance con el usuario (ver sección "Clarifications" de spec.md, sesión "revisión post-implementación") antes de tocar código.
+
+- [X] T051 [P] Corregir causa raíz de "admin ve la misma vista que pasajero" / "no hay botón de salir": faltaba `bootstrap.bundle.min.js` en `fragments/layout.html`, por lo que el menú colapsado (`navbar-toggler`) nunca se desplegaba en ventanas angostas. El control de acceso a `/admin/**` y el logout ya funcionaban correctamente a nivel de servidor (verificado con `curl`); el bug era puramente de JS faltante en el frontend.
+- [X] T052 Redirección post-login por rol: nuevo `RolBasedAuthenticationSuccessHandler` en `security/`, ADMIN → `/admin`, PASAJERO → `/viajes`, configurado en `SecurityConfig`.
+- [X] T053 [P] Reforzar validación de registro en `RegistroForm`: nombre solo letras/espacios (mínimo 2 caracteres), contraseña con mínimo 8 caracteres + mayúscula + número (FR-001).
+- [X] T054 [P] Recuperar contraseña: `UsuarioService.recuperarPassword(...)`, `RecuperarPasswordController`, vista `auth/recuperar-password.html`, enlace desde `login.html` (FR-020).
+- [X] T055 Campo `chofer` (texto simple) en `Viaje`: entidad, `ViajeForm`, `ViajeService.crearViaje/editarViaje`, `AdminViajeController`, `admin-form.html`; actualizado en los 8 archivos que construían `new Viaje(...)` (código y tests) (FR-014, FR-004).
+- [X] T056 [P] Rediseño de `viajes/lista.html`: ícono de bus, chofer, badge "COMPLETO" cuando `asientosLibres == 0` (nuevo `ViajeConDisponibilidad` + `ViajeService.contarAsientosLibres(...)`) (FR-004).
+- [X] T057 [P] Confirmación antes de reservar (resumen de asientos y monto vía `confirm()`) y enlaces "volver" en `viajes/detalle.html`, `pagos/formulario.html`, `reservas/detalle.html` (FR-006).
+- [X] T058 Actualizar `spec.md` (Clarifications, FR-001/004/006/014, FR-020/021/022 nuevos, Edge Cases, Key Entities, Assumptions) y `data-model.md` (campo `chofer` en Viaje) para reflejar las decisiones de esta fase.
+
+**Explícitamente descartado en esta revisión** (decisión del usuario, ver Clarifications): rediseñar el mapa de asientos a distribución física real (1+3), flujo de un asiento a la vez, pago parcial por asiento, entidades `Chofer`/`Ruta` con CRUD propio. Quedan fuera de alcance salvo pedido explícito futuro.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
