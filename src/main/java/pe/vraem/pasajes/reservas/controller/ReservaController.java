@@ -21,6 +21,7 @@ import pe.vraem.pasajes.auth.model.Usuario;
 import pe.vraem.pasajes.auth.service.UsuarioActualProvider;
 import pe.vraem.pasajes.pagos.model.Pago;
 import pe.vraem.pasajes.pagos.repository.PagoRepository;
+import pe.vraem.pasajes.pagos.service.PagoService;
 import pe.vraem.pasajes.reservas.model.EstadoReserva;
 import pe.vraem.pasajes.reservas.model.Reserva;
 import pe.vraem.pasajes.reservas.service.AsientoNoDisponibleException;
@@ -35,19 +36,24 @@ import pe.vraem.pasajes.viajes.service.ViajeService;
 @Controller
 public class ReservaController {
 
+    /** Referencia fija para pagos confirmados al instante por el ADMIN (venta presencial, sin numero de operacion real). */
+    private static final String REFERENCIA_VENTA_ADMIN = "ADMIN";
+
     private final ReservaService reservaService;
     private final ViajeService viajeService;
     private final AsientoRepository asientoRepository;
     private final PagoRepository pagoRepository;
+    private final PagoService pagoService;
     private final UsuarioActualProvider usuarioActualProvider;
 
     public ReservaController(ReservaService reservaService, ViajeService viajeService,
-            AsientoRepository asientoRepository, PagoRepository pagoRepository,
+            AsientoRepository asientoRepository, PagoRepository pagoRepository, PagoService pagoService,
             UsuarioActualProvider usuarioActualProvider) {
         this.reservaService = reservaService;
         this.viajeService = viajeService;
         this.asientoRepository = asientoRepository;
         this.pagoRepository = pagoRepository;
+        this.pagoService = pagoService;
         this.usuarioActualProvider = usuarioActualProvider;
     }
 
@@ -91,6 +97,12 @@ public class ReservaController {
             @Valid @ModelAttribute("confirmarAsientoForm") ConfirmarAsientoForm form, BindingResult bindingResult,
             Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
         Viaje viaje = viajeService.obtenerDetalle(id);
+        Usuario comprador = usuarioActualProvider.obtener(authentication);
+        boolean esAdmin = comprador.getRol() == Rol.ADMIN;
+
+        if (esAdmin && form.getMetodoPago() == null) {
+            bindingResult.rejectValue("metodoPago", "requerido", "Selecciona un metodo de pago");
+        }
 
         if (bindingResult.hasErrors()) {
             Asiento asiento = asientoRepository.findById(asientoId).orElse(null);
@@ -99,11 +111,18 @@ public class ReservaController {
             return "viajes/confirmar-asiento";
         }
 
-        Usuario comprador = usuarioActualProvider.obtener(authentication);
-
         try {
             Reserva reserva = reservaService.crearReserva(viaje, comprador, asientoId, form.getNombrePasajero(),
                     form.getDniPasajero());
+
+            if (esAdmin) {
+                // Venta presencial: el ADMIN recibe el pago directamente, se confirma al instante (FR-036, sin "pendiente").
+                pagoService.registrarPago(reserva, form.getMetodoPago(), REFERENCIA_VENTA_ADMIN);
+                pagoService.confirmarPago(reserva);
+                redirectAttributes.addFlashAttribute("exito", "Venta registrada y pago confirmado al instante.");
+                return "redirect:/reservas/" + reserva.getId();
+            }
+
             redirectAttributes.addFlashAttribute("exito", "Asiento reservado. Completa el pago para confirmar tu boleto.");
             return "redirect:/reservas/" + reserva.getId() + "/pago";
         } catch (SeleccionInvalidaException | AsientoNoDisponibleException ex) {

@@ -140,32 +140,4 @@ class PagoControllerIT {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("rechazado")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("referencia invalida")));
     }
-
-    @Test
-    void ventaEnEfectivoConfirmaElPagoAlInstante() throws Exception {
-        Camioneta camioneta = camionetaRepository.save(new Camioneta("PGO-003", "Ayacucho - Kimbiri"));
-        Viaje viaje = viajeRepository.save(new Viaje("Ayacucho", "Kimbiri", LocalDate.now().plusDays(2),
-                LocalTime.of(6, 0), camioneta, new BigDecimal("35.00"), "Carlos Mamani"));
-        Asiento asiento = asientoRepository.save(new Asiento(viaje, 1));
-
-        Usuario admin = usuarioRepository.save(new Usuario("99997766", "Admin Efectivo", "efectivo-admin@example.com",
-                passwordEncoder.encode("claveSegura1"), Rol.ADMIN));
-
-        mockMvc.perform(post("/admin/viajes/{id}/asientos/{asientoId}/venta-efectivo", viaje.getId(), asiento.getId())
-                        .with(csrf())
-                        .with(user(admin.getEmail()).authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
-                        .param("nombrePasajero", "Cliente Presencial")
-                        .param("dniPasajero", "88887777"))
-                .andExpect(status().is3xxRedirection());
-
-        Asiento asientoVendido = asientoRepository.findById(asiento.getId()).orElseThrow();
-        assertThat(asientoVendido.getEstado()).isEqualTo(EstadoAsiento.PAGADO);
-        assertThat(asientoVendido.getNombrePasajero()).isEqualTo("Cliente Presencial");
-
-        Reserva reserva = reservaRepository.findAll().stream()
-                .filter(r -> r.getViaje().getId().equals(viaje.getId()))
-                .findFirst().orElseThrow();
-        assertThat(reserva.getEstado()).isEqualTo(pe.vraem.pasajes.reservas.model.EstadoReserva.PAGADO);
-        assertThat(reserva.getUsuario().getId()).isEqualTo(admin.getId());
-    }
 }

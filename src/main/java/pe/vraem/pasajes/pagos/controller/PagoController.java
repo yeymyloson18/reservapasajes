@@ -1,7 +1,5 @@
 package pe.vraem.pasajes.pagos.controller;
 
-import java.util.List;
-
 import jakarta.validation.Valid;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -18,20 +16,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import pe.vraem.pasajes.auth.model.Usuario;
 import pe.vraem.pasajes.auth.service.UsuarioActualProvider;
-import pe.vraem.pasajes.pagos.model.MetodoPago;
 import pe.vraem.pasajes.pagos.service.PagoInvalidoException;
 import pe.vraem.pasajes.pagos.service.PagoService;
 import pe.vraem.pasajes.pagos.service.QrCodeGenerator;
-import pe.vraem.pasajes.reservas.controller.ConfirmarAsientoForm;
 import pe.vraem.pasajes.reservas.model.Reserva;
-import pe.vraem.pasajes.reservas.service.AsientoNoDisponibleException;
 import pe.vraem.pasajes.reservas.service.ReservaService;
-import pe.vraem.pasajes.reservas.service.SeleccionInvalidaException;
-import pe.vraem.pasajes.viajes.model.Asiento;
-import pe.vraem.pasajes.viajes.model.EstadoAsiento;
-import pe.vraem.pasajes.viajes.model.Viaje;
-import pe.vraem.pasajes.viajes.repository.AsientoRepository;
-import pe.vraem.pasajes.viajes.service.ViajeService;
 
 @Controller
 public class PagoController {
@@ -39,25 +28,17 @@ public class PagoController {
     /** Numero de Yape/Plin al que se debe pagar (no hay integracion real con su API). */
     private static final String NUMERO_YAPE_PLIN = "989516543";
 
-    /** Referencia fija para pagos en efectivo (no existe un numero de operacion real). */
-    private static final String REFERENCIA_EFECTIVO = "EFECTIVO";
-
     private final PagoService pagoService;
     private final ReservaService reservaService;
     private final UsuarioActualProvider usuarioActualProvider;
     private final QrCodeGenerator qrCodeGenerator;
-    private final ViajeService viajeService;
-    private final AsientoRepository asientoRepository;
 
     public PagoController(PagoService pagoService, ReservaService reservaService,
-            UsuarioActualProvider usuarioActualProvider, QrCodeGenerator qrCodeGenerator,
-            ViajeService viajeService, AsientoRepository asientoRepository) {
+            UsuarioActualProvider usuarioActualProvider, QrCodeGenerator qrCodeGenerator) {
         this.pagoService = pagoService;
         this.reservaService = reservaService;
         this.usuarioActualProvider = usuarioActualProvider;
         this.qrCodeGenerator = qrCodeGenerator;
-        this.viajeService = viajeService;
-        this.asientoRepository = asientoRepository;
     }
 
     @GetMapping("/reservas/{id}/pago")
@@ -123,65 +104,6 @@ public class PagoController {
             redirectAttributes.addFlashAttribute("errorGeneral", ex.getMessage());
         }
         return "redirect:/admin/reservas";
-    }
-
-    @GetMapping("/admin/viajes/{id}/venta-efectivo")
-    public String mostrarMapaVentaEfectivo(@PathVariable Long id, Model model) {
-        Viaje viaje = viajeService.obtenerDetalle(id);
-        List<Asiento> asientos = asientoRepository.findAllByViajeOrderByNumeroAsc(viaje);
-
-        model.addAttribute("viaje", viaje);
-        model.addAttribute("asientoAdelante", asientos.stream().filter(Asiento::esAdelante).findFirst().orElse(null));
-        model.addAttribute("asientosAtras", asientos.stream().filter(a -> !a.esAdelante()).toList());
-        return "admin/venta-efectivo";
-    }
-
-    @GetMapping("/admin/viajes/{id}/asientos/{asientoId}/venta-efectivo")
-    public String mostrarConfirmacionVentaEfectivo(@PathVariable Long id, @PathVariable Long asientoId, Model model,
-            RedirectAttributes redirectAttributes) {
-        Viaje viaje = viajeService.obtenerDetalle(id);
-        Asiento asiento = asientoRepository.findById(asientoId).orElse(null);
-
-        if (asiento == null || !asiento.getViaje().getId().equals(id) || asiento.getEstado() != EstadoAsiento.LIBRE) {
-            redirectAttributes.addFlashAttribute("errorGeneral", "Ese asiento ya no esta disponible.");
-            return "redirect:/admin/viajes/" + id + "/venta-efectivo";
-        }
-
-        model.addAttribute("viaje", viaje);
-        model.addAttribute("asiento", asiento);
-        if (!model.containsAttribute("confirmarAsientoForm")) {
-            model.addAttribute("confirmarAsientoForm", new ConfirmarAsientoForm());
-        }
-        return "admin/venta-efectivo-confirmar";
-    }
-
-    @PostMapping("/admin/viajes/{id}/asientos/{asientoId}/venta-efectivo")
-    public String confirmarVentaEfectivo(@PathVariable Long id, @PathVariable Long asientoId,
-            @Valid @ModelAttribute("confirmarAsientoForm") ConfirmarAsientoForm form, BindingResult bindingResult,
-            Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
-        Viaje viaje = viajeService.obtenerDetalle(id);
-
-        if (bindingResult.hasErrors()) {
-            Asiento asiento = asientoRepository.findById(asientoId).orElse(null);
-            model.addAttribute("viaje", viaje);
-            model.addAttribute("asiento", asiento);
-            return "admin/venta-efectivo-confirmar";
-        }
-
-        Usuario admin = usuarioActualProvider.obtener(authentication);
-
-        try {
-            Reserva reserva = reservaService.crearReserva(viaje, admin, asientoId, form.getNombrePasajero(),
-                    form.getDniPasajero());
-            pagoService.registrarPago(reserva, MetodoPago.EFECTIVO, REFERENCIA_EFECTIVO);
-            pagoService.confirmarPago(reserva);
-
-            redirectAttributes.addFlashAttribute("exito", "Venta registrada y pago confirmado al instante.");
-            return "redirect:/reservas/" + reserva.getId();
-        } catch (SeleccionInvalidaException | AsientoNoDisponibleException | PagoInvalidoException ex) {
-            redirectAttributes.addFlashAttribute("errorGeneral", ex.getMessage());
-            return "redirect:/admin/viajes/" + id + "/venta-efectivo";
-        }
     }
 
     private String generarQr(Reserva reserva) {

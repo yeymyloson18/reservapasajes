@@ -90,7 +90,7 @@ un Asiento; un pasajero que quiere varios asientos crea varias Reservas (una por
 **Relaciones**: 1 Reserva → 1 Asiento (vía `Asiento.reserva_id`). 1 Reserva → 1 Pago.
 
 **Transiciones de estado**:
-- `PENDIENTE → PAGADO`: al confirmar el ADMIN el pago asociado (FR-012), o de inmediato en una venta en efectivo (FR-036).
+- `PENDIENTE → PAGADO`: al confirmar el ADMIN el pago asociado (FR-012), o de inmediato cuando es el propio ADMIN quien crea la reserva desde la pantalla de confirmar asiento, sin importar el método elegido (FR-036).
 - `PENDIENTE → EXPIRADA`: al vencer el plazo de 30 minutos sin pago confirmado (FR-011).
 - `PENDIENTE → RECHAZADA`: al rechazar el ADMIN el pago asociado; libera el Asiento (vuelve a `LIBRE`) (FR-032).
 
@@ -109,7 +109,7 @@ Registro del intento de cobro de una Reserva.
 | reserva_id | bigint, FK → Reserva | obligatorio, único (una Reserva tiene un único Pago) |
 | metodo | enum(`YAPE`, `PLIN`, `EFECTIVO`) | obligatorio |
 | estado | enum(`PENDIENTE`, `CONFIRMADO`, `RECHAZADO`) | obligatorio, por defecto `PENDIENTE` |
-| referencia | varchar(50) | obligatorio; para `YAPE`/`PLIN` debe tener exactamente 8 dígitos numéricos (validado en `PagoForm`, no en la entidad); para `EFECTIVO` se guarda un valor fijo ("EFECTIVO"), ya que no existe número de operación real |
+| referencia | varchar(50) | obligatorio; cuando la ingresa el pasajero (`YAPE`/`PLIN` vía `PagoForm`) debe tener exactamente 8 dígitos numéricos; cuando la reserva la crea el propio ADMIN (cualquier método, venta presencial) se guarda un valor fijo ("ADMIN"), ya que no existe número de operación real que verificar |
 | motivoRechazo | varchar(255) | nulo salvo que `estado = RECHAZADO`; texto libre opcional ingresado por el ADMIN |
 
 **Transiciones de estado**:

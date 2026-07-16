@@ -227,6 +227,18 @@ description: "Task list for Reserva de Pasajes de Bus VRAEM"
 
 ---
 
+## Phase 12: Consolidar venta presencial en la pantalla compartida de asiento (2026-07-16)
+
+**Purpose**: El usuario reportó 4 requisitos (16-19) que refinan la venta presencial del ADMIN (FR-036, Fase 11): el selector de método de pago debe vivir en la misma pantalla de "confirmar asiento" que usan los pasajeros, no en una pantalla dedicada. Se confirmó (ver Clarifications de spec.md) eliminar la pantalla dedicada "Vender en efectivo" y consolidar en un único flujo.
+
+- [X] T091 `ConfirmarAsientoForm` agrega el campo opcional `metodoPago` (`MetodoPago`); `viajes/confirmar-asiento.html` agrega el selector "Método de pago" (Efectivo/Yape/Plin) visible solo con `sec:authorize="hasRole('ADMIN')"` (FR-036, FR-039).
+- [X] T092 `ReservaController` inyecta `PagoService`; en `confirmar(...)`, si quien reserva es ADMIN exige `metodoPago` (si falta, error de validación) y, tras crear la reserva, registra y confirma el pago al instante (referencia fija `"ADMIN"`), redirigiendo directo al boleto (`/reservas/{id}`) en vez de a la pantalla de pago (FR-036, FR-039).
+- [X] T093 Se elimina la pantalla dedicada: endpoints `GET/GET/POST /admin/viajes/{id}/(asientos/{asientoId}/)venta-efectivo` en `PagoController`, vistas `admin/venta-efectivo.html` y `admin/venta-efectivo-confirmar.html`; el enlace "Vender en efectivo" en `admin/gestionar-viajes.html` ahora apunta a `/viajes/{id}` (la pantalla compartida).
+- [X] T094 Tests: se reemplaza el test de la pantalla dedicada (eliminado de `PagoControllerIT`) por `ReservaControllerIT.unAdminQueReservaConMetodoDePagoConfirmaAlInstanteSinPasarPorPendiente` y `unAdminSinElegirMetodoDePagoDebeVolverAIntentar`.
+- [X] T095 Actualizar `spec.md` (FR-036 reescrito, FR-039 nuevo, Edge Cases, Assumptions) y `data-model.md` (referencia fija `"ADMIN"` para ventas presenciales de cualquier método).
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

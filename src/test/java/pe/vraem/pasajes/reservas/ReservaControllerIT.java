@@ -83,6 +83,11 @@ class ReservaControllerIT {
                 passwordEncoder.encode("claveSegura1"), Rol.PASAJERO));
     }
 
+    private Usuario crearAdmin(String dni, String email) {
+        return usuarioRepository.save(new Usuario(dni, "Admin " + dni, email,
+                passwordEncoder.encode("claveSegura1"), Rol.ADMIN));
+    }
+
     @Test
     void creaReservaDeUnAsientoYRedirigeAlPago() throws Exception {
         Viaje viaje = crearViajeConAsientos();
@@ -190,6 +195,48 @@ class ReservaControllerIT {
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Has viajado")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Santa Rosa")));
+    }
+
+    @Test
+    void unAdminQueReservaConMetodoDePagoConfirmaAlInstanteSinPasarPorPendiente() throws Exception {
+        Viaje viaje = crearViajeConAsientos();
+        Usuario admin = crearAdmin("66667777", "venta-admin@example.com");
+        Asiento asiento = asientoRepository.findAllByViajeOrderByNumeroAsc(viaje).get(0);
+
+        mockMvc.perform(post("/viajes/{id}/asientos/{asientoId}", viaje.getId(), asiento.getId())
+                        .with(csrf())
+                        .with(user(admin.getEmail()).authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .param("nombrePasajero", "Cliente Presencial")
+                        .param("dniPasajero", "88887777")
+                        .param("metodoPago", "EFECTIVO"))
+                .andExpect(status().is3xxRedirection());
+
+        Asiento asientoVendido = asientoRepository.findById(asiento.getId()).orElseThrow();
+        assertThat(asientoVendido.getEstado()).isEqualTo(EstadoAsiento.PAGADO);
+        assertThat(asientoVendido.getNombrePasajero()).isEqualTo("Cliente Presencial");
+
+        Reserva reserva = reservaRepository.findAll().stream()
+                .filter(r -> r.getViaje().getId().equals(viaje.getId()))
+                .findFirst().orElseThrow();
+        assertThat(reserva.getEstado()).isEqualTo(EstadoReserva.PAGADO);
+        assertThat(reserva.getUsuario().getId()).isEqualTo(admin.getId());
+    }
+
+    @Test
+    void unAdminSinElegirMetodoDePagoDebeVolverAIntentar() throws Exception {
+        Viaje viaje = crearViajeConAsientos();
+        Usuario admin = crearAdmin("55557777", "venta-admin-sin-metodo@example.com");
+        Asiento asiento = asientoRepository.findAllByViajeOrderByNumeroAsc(viaje).get(0);
+
+        mockMvc.perform(post("/viajes/{id}/asientos/{asientoId}", viaje.getId(), asiento.getId())
+                        .with(csrf())
+                        .with(user(admin.getEmail()).authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .param("nombrePasajero", "Cliente Presencial")
+                        .param("dniPasajero", "88887777"))
+                .andExpect(status().isOk());
+
+        Asiento asientoSinVender = asientoRepository.findById(asiento.getId()).orElseThrow();
+        assertThat(asientoSinVender.getEstado()).isEqualTo(EstadoAsiento.LIBRE);
     }
 
     private void ejecutarIntentoDeReserva(Viaje viaje, Asiento asiento, Usuario usuario, CountDownLatch listos,

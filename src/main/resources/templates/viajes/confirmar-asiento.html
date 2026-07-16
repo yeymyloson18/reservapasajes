@@ -33,6 +33,16 @@
                 <input type="text" class="form-control" id="dniPasajero" th:field="*{dniPasajero}" maxlength="8" />
                 <div class="text-danger small" th:if="${#fields.hasErrors('dniPasajero')}" th:errors="*{dniPasajero}"></div>
             </div>
+            <div class="mb-3" sec:authorize="hasRole('ADMIN')" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+                <label class="form-label" for="metodoPago">Metodo de pago (venta presencial, se confirma al instante)</label>
+                <select class="form-select" id="metodoPago" th:field="*{metodoPago}">
+                    <option value="">Selecciona...</option>
+                    <option value="EFECTIVO">Efectivo</option>
+                    <option value="YAPE">Yape</option>
+                    <option value="PLIN">Plin</option>
+                </select>
+                <div class="text-danger small" th:if="${#fields.hasErrors('metodoPago')}" th:errors="*{metodoPago}"></div>
+            </div>
             <button type="submit" class="btn btn-primary w-100">Confirmar reserva</button>
         </form>
     </main>
