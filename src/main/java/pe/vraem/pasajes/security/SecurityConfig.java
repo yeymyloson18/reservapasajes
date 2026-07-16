@@ -5,9 +5,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 import pe.vraem.pasajes.auth.service.UsuarioDetailsService;
 
@@ -18,6 +21,18 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /** Registro de sesiones activas, usado para limitar a una sesion por cuenta. */
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    /** Notifica al SessionRegistry cuando una sesion HTTP se destruye (logout, expiracion). */
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
     }
 
     @Bean
@@ -31,7 +46,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
             RolBasedAuthenticationSuccessHandler successHandler,
-            AccountLoginFailureHandler failureHandler) throws Exception {
+            AccountLoginFailureHandler failureHandler,
+            SessionRegistry sessionRegistry) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/registro", "/login", "/recuperar-password", "/webjars/**", "/css/**",
@@ -47,7 +63,12 @@ public class SecurityConfig {
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
-                        .permitAll());
+                        .permitAll())
+                .sessionManagement(session -> session
+                        .maximumSessions(1)
+                        .maxSessionsPreventsLogin(false)
+                        .expiredUrl("/login?expired")
+                        .sessionRegistry(sessionRegistry));
 
         return http.build();
     }

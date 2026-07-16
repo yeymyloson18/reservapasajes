@@ -2,6 +2,7 @@ package pe.vraem.pasajes.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -9,9 +10,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,5 +82,25 @@ class AuthControllerIT {
 
         mockMvc.perform(formLogin().user("bloqueable@example.com").password("claveSegura1"))
                 .andExpect(SecurityMockMvcResultMatchers.unauthenticated());
+    }
+
+    @Test
+    void unSegundoLoginInvalidaLaSesionAnterior() throws Exception {
+        usuarioRepository.save(new Usuario("44445555", "Usuario Sesion", "sesion@example.com",
+                passwordEncoder.encode("claveSegura1"), pe.vraem.pasajes.auth.model.Rol.PASAJERO));
+
+        MvcResult primerLogin = mockMvc.perform(formLogin().user("sesion@example.com").password("claveSegura1"))
+                .andExpect(SecurityMockMvcResultMatchers.authenticated())
+                .andReturn();
+        MockHttpSession primeraSesion = (MockHttpSession) primerLogin.getRequest().getSession(false);
+
+        mockMvc.perform(formLogin().user("sesion@example.com").password("claveSegura1"))
+                .andExpect(SecurityMockMvcResultMatchers.authenticated());
+
+        MvcResult resultadoConSesionVieja = mockMvc.perform(get("/viajes").session(primeraSesion))
+                .andExpect(status().is3xxRedirection())
+                .andReturn();
+        String location = resultadoConSesionVieja.getResponse().getRedirectedUrl();
+        assertThat(location).contains("/login").contains("expired");
     }
 }

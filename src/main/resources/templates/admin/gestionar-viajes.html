@@ -48,6 +48,8 @@
                         <td class="d-flex gap-2">
                             <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/viajes/{id}/editar(id=${viaje.id})}">Editar</a>
                             <a class="btn btn-sm btn-outline-secondary" th:href="@{/admin/reservas(viajeId=${viaje.id})}">Ver reservas</a>
+                            <a th:unless="${item.completo()}" class="btn btn-sm btn-outline-success"
+                               th:href="@{/admin/viajes/{id}/venta-efectivo(id=${viaje.id})}">Vender en efectivo</a>
                             <form th:if="${item.completo()}" th:action="@{/admin/viajes/{id}/archivar(id=${viaje.id})}" method="post"
                                   th:attr="onsubmit=|return confirm('¿Archivar el viaje ${viaje.origen} -> ${viaje.destino}? Ya no aparecera en las listas activas.')|">
                                 <button type="submit" class="btn btn-sm btn-outline-success">Archivar</button>

@@ -22,6 +22,9 @@
         <div class="alert alert-info" th:if="${param.logout}">
             Sesion cerrada correctamente.
         </div>
+        <div class="alert alert-warning" th:if="${param.expired}">
+            Tu sesion se cerro porque iniciaste sesion en otro lugar.
+        </div>
 
         <form th:action="@{/login}" method="post">
             <div class="mb-3">

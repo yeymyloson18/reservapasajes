@@ -50,6 +50,14 @@ El usuario pidió agregar la contraparte de "Confirmar pago": la posibilidad de 
 
 - Q: ¿El ADMIN debe poder escribir un motivo de rechazo visible para el pasajero? → A: Sí, motivo de texto libre y opcional; si se deja vacío, el pasajero ve un mensaje genérico.
 
+### Session 2026-07-16 (historial, navegación de boleto, venta en efectivo, referencia y sesión única)
+
+Cuarta ronda de requisitos (numerados 6-15 por el usuario). Los puntos 14 y 15 ya estaban completamente satisfechos por el rechazo de pago de la sesión anterior; se confirman sin cambios de código. Decisiones confirmadas antes de programar:
+
+- Q: ¿Cómo se determina que una reserva es "histórica" (viaje ya realizado)? → A: Se calcula al vuelo (sin campo `archivada` ni tarea programada): una reserva es histórica cuando está `PAGADO` y la fecha de su viaje ya pasó. Mantiene el esquema mínimo.
+- Q: ¿Quién queda como "usuario comprador" en una venta presencial en efectivo, si el cliente no tiene cuenta? → A: La cuenta del propio ADMIN que realiza la venta.
+- Q: ¿Cómo se bloquean las sesiones duplicadas de una misma cuenta? → A: Mecanismo estándar de Spring Security (una sola sesión activa por **cuenta**, no por dispositivo real, ya que el fingerprinting de dispositivo no es confiable en la web); el nuevo login expulsa a la sesión anterior. Se confirmó que esto permite que cuentas distintas (p. ej. un ADMIN y un PASAJERO) sigan usando el mismo dispositivo simultáneamente, ya que la restricción es por cuenta y no por navegador.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Comprar un pasaje de principio a fin (Priority: P1)
@@ -125,6 +133,8 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - ¿Qué ocurre si el ADMIN intenta archivar un viaje que todavía tiene asientos libres? El sistema rechaza la acción e indica que solo se pueden archivar viajes sin asientos libres.
 - ¿Qué ocurre con las reservas y pasajeros de un viaje archivado? Se conservan intactos y siguen siendo consultables desde "Ver archivados"; el archivado nunca borra ni permite editar datos de pasajeros.
 - ¿Qué ocurre si el ADMIN rechaza el pago de una reserva pendiente? La reserva pasa a estado "rechazada", el asiento vuelve a "libre" para que otro pasajero pueda reservarlo, y el pasajero ve el motivo (si el ADMIN lo indicó) al consultar esa reserva.
+- ¿Qué ocurre si el ADMIN vende un asiento en efectivo a un cliente presencial? La reserva y el pago quedan confirmados ("pagado") de inmediato, sin pasar por el estado "pendiente" de verificación, ya que el ADMIN recibe el dinero directamente.
+- ¿Qué ocurre si un usuario ya tiene una sesión activa e inicia sesión de nuevo con la misma cuenta (mismo u otro dispositivo)? La sesión anterior se invalida automáticamente; si esa sesión anterior intenta hacer algo, es redirigida al login con un aviso de que se cerró por un nuevo inicio de sesión.
 
 ## Requirements *(mandatory)*
 
@@ -162,6 +172,12 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - **FR-030**: El sistema MUST permitir al ADMIN archivar manualmente un viaje únicamente cuando no tenga asientos libres (esté "COMPLETO"). Un viaje archivado MUST dejar de aparecer en la lista de viajes disponibles para pasajeros y en "Gestionar viajes", pero MUST seguir siendo consultable (junto con sus reservas y pasajeros) desde una vista de viajes archivados. El archivado MUST NOT eliminar ni permitir editar los datos de los pasajeros de las reservas asociadas.
 - **FR-031**: El sistema MUST ofrecer, en las pantallas de pago y de detalle de boleto/reserva, un control de "volver" que regrese a la pantalla anterior real del navegador, en vez de dirigir siempre a un destino fijo.
 - **FR-032**: El sistema MUST permitir al ADMIN rechazar el pago de una reserva pendiente, indicando opcionalmente un motivo en texto libre. Al rechazar, el sistema MUST liberar el asiento asociado (vuelve a "libre") y MUST cambiar el estado de la reserva a "rechazada", permitiendo al pasajero volver a intentar reservar. El pasajero MUST poder ver, al consultar esa reserva, que su pago fue rechazado y el motivo indicado por el ADMIN (si lo hubo).
+- **FR-033**: El sistema MUST considerar "histórica" (viaje ya utilizado) a toda reserva en estado "pagado" cuya fecha de viaje ya haya pasado, sin requerir una acción manual de archivado ni borrar ningún dato; esto forma la base de datos histórica de pasajeros que usaron el servicio.
+- **FR-034**: El sistema MUST mostrar, en "Mis reservas", un historial del pasajero con las fechas de los viajes ya realizados (reservas históricas, FR-033) y el total de veces que ha viajado.
+- **FR-035**: El sistema MUST ofrecer, en la pantalla de comprobante de pago pendiente y en la pantalla de boleto pagado, un botón para volver al menú principal (distinto del control de "volver atrás" ya existente), y MUST ofrecer en "Mis reservas" un botón explícito para ver el boleto de cada reserva pagada.
+- **FR-036**: El sistema MUST permitir al ADMIN registrar una venta presencial en efectivo para un cliente sin cuenta propia (usando la cuenta del ADMIN como comprador), confirmando el pago y la reserva de inmediato (estado "pagado" desde su creación, sin pasar por "pendiente").
+- **FR-037**: El sistema MUST validar que el número/código de operación ingresado por el pasajero al pagar (Yape/Plin) tenga exactamente 8 dígitos numéricos, rechazando cualquier otro formato.
+- **FR-038**: El sistema MUST impedir que una misma cuenta tenga más de una sesión activa simultánea; al iniciar sesión de nuevo con esa cuenta, la sesión anterior MUST invalidarse automáticamente. Esta restricción es por cuenta, no por dispositivo: cuentas distintas pueden seguir usando el mismo dispositivo/navegador de forma simultánea.
 
 ### Key Entities
 
@@ -170,7 +186,7 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - **Viaje**: Salida programada entre dos puntos del recorrido Ayacucho-VRAEM; atributos: origen, destino, fecha (no anterior a hoy), hora, camioneta asignada, chofer (nombre, campo de texto simple), precio por asiento, archivado (indica si el ADMIN lo sacó de las listas activas tras llenarse). Siempre tiene exactamente 4 Asientos (fijo, no configurable). Se relaciona con múltiples Asientos y puede tener múltiples Reservas.
 - **Asiento**: Unidad reservable dentro de un viaje; atributos: número (1 a 4), posición (el asiento 1 va adelante junto al chofer; los asientos 2-4 van juntos atrás; se deriva del número, no es un campo separado), estado (libre/reservado/pagado); pertenece a un único Viaje.
 - **Reserva**: Solicitud de un asiento hecha por un Usuario para un Viaje; atributos: usuario comprador, viaje, asiento elegido (con nombre y DNI del pasajero que viajará), monto total (= precio del viaje), estado (pendiente/pagado/expirada/rechazada), fecha de creación. Se relaciona con un Pago. Cada Reserva cubre exactamente un Asiento; un pasajero que quiere varios asientos crea varias Reservas.
-- **Pago**: Registro del intento de cobro de una Reserva; atributos: método (Yape o Plin), estado (pendiente/confirmado/rechazado), referencia/número de operación, motivo de rechazo (texto libre, opcional, solo cuando el ADMIN rechaza el pago); pertenece a una única Reserva.
+- **Pago**: Registro del intento de cobro de una Reserva; atributos: método (Yape, Plin o Efectivo), estado (pendiente/confirmado/rechazado), referencia/número de operación (exactamente 8 dígitos para Yape/Plin; valor fijo para Efectivo, sin número de operación real), motivo de rechazo (texto libre, opcional, solo cuando el ADMIN rechaza el pago); pertenece a una única Reserva.
 
 ## Success Criteria *(mandatory)*
 
@@ -200,3 +216,6 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - **Bloqueo de cuenta**: 5 intentos de login fallidos consecutivos bloquean la cuenta, incluso ante la contraseña correcta. Un login exitoso o una recuperación de contraseña resetean el contador. No hay un mecanismo de desbloqueo alternativo (p. ej. por soporte) en esta versión.
 - **QR de pago**: el código QR generado en la pantalla de pago codifica un texto simple (número de Yape/Plin y datos de la reserva) mediante una librería local de generación de QR; no existe integración real con las APIs de Yape o Plin para iniciar o verificar el pago automáticamente. La confirmación del pago sigue siendo manual por parte del ADMIN (ver Assumption "Confirmación de pago").
 - **Archivado de viajes**: es una acción manual y reversible solo por intervención directa en los datos (no hay un botón de "desarchivar" en esta versión). Un viaje archivado conserva todas sus Reservas, Asientos y datos de pasajeros sin cambios; el ADMIN puede consultarlos pero no editarlos ni eliminarlos, evitando que se alteren registros de pasajeros que ya viajaron.
+- **Historial de reservas**: no existe un campo o proceso de archivado separado para la Reserva; una reserva se considera "histórica" simplemente porque está `PAGADO` y la fecha de su Viaje ya pasó (se calcula al consultar, no se persiste un estado adicional). Esto mantiene el esquema mínimo (Principio III) y de igual forma nunca se borra ni se pierde el dato.
+- **Venta en efectivo**: dado que un cliente presencial no necesariamente tiene una cuenta registrada, la Reserva de una venta en efectivo se registra con el propio ADMIN como "usuario comprador"; el nombre y DNI reales del pasajero se guardan en el Asiento igual que en cualquier otra reserva.
+- **Sesión única**: la identificación real de "mismo dispositivo/máquina" no es confiable en un entorno web sin técnicas adicionales (fingerprinting) que este proyecto no implementa. En su lugar, se usa el control estándar de sesiones concurrentes de Spring Security, que limita a una sesión activa por cuenta (sin importar el dispositivo); iniciar sesión de nuevo con la misma cuenta invalida la sesión anterior. Cuentas distintas sí pueden compartir un mismo dispositivo/navegador de forma simultánea.

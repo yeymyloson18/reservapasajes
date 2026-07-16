@@ -17,7 +17,11 @@
             <div class="card-body text-center">
                 <p class="text-muted mb-1">Codigo de reserva</p>
                 <h1 class="display-6 mb-3" th:text="${reserva.codigoReserva}">ABCD1234</h1>
-                <span class="badge bg-success">Boleto pagado</span>
+                <span class="badge bg-success mb-3 d-block">Boleto pagado</span>
+                <a class="btn btn-outline-primary" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+                   sec:authorize="hasRole('ADMIN')" th:href="@{/admin}">Volver al menu principal</a>
+                <a class="btn btn-outline-primary" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+                   sec:authorize="hasRole('PASAJERO')" th:href="@{/viajes}">Volver al menu principal</a>
             </div>
         </div>
 
@@ -36,8 +40,12 @@
                     <span th:text="${reserva.viaje.fecha}">2026-01-01</span> <span th:text="${reserva.viaje.hora}">08:00</span></p>
                 <p class="mb-1"><strong>Metodo:</strong> <span th:text="${pago.metodo}">YAPE</span> &mdash;
                     <strong>Referencia:</strong> <span th:text="${pago.referencia}">000000</span></p>
-                <p class="mb-0"><strong>Monto:</strong> S/ <span th:text="${reserva.montoTotal}">0.00</span> &mdash;
+                <p class="mb-3"><strong>Monto:</strong> S/ <span th:text="${reserva.montoTotal}">0.00</span> &mdash;
                     <span class="badge bg-warning text-dark">Esperando confirmacion del administrador</span></p>
+                <a class="btn btn-outline-primary" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+                   sec:authorize="hasRole('ADMIN')" th:href="@{/admin}">Volver al menu principal</a>
+                <a class="btn btn-outline-primary" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+                   sec:authorize="hasRole('PASAJERO')" th:href="@{/viajes}">Volver al menu principal</a>
             </div>
         </div>
 

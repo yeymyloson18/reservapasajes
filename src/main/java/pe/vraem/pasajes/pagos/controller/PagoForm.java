@@ -2,6 +2,7 @@ package pe.vraem.pasajes.pagos.controller;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 import pe.vraem.pasajes.pagos.model.MetodoPago;
 
@@ -11,6 +12,7 @@ public class PagoForm {
     private MetodoPago metodo;
 
     @NotBlank(message = "Ingresa la referencia u operacion del pago")
+    @Pattern(regexp = "\\d{8}", message = "La referencia debe tener exactamente 8 digitos numericos")
     private String referencia;
 
     public MetodoPago getMetodo() {

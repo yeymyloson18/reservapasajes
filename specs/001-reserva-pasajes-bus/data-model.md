@@ -90,9 +90,11 @@ un Asiento; un pasajero que quiere varios asientos crea varias Reservas (una por
 **Relaciones**: 1 Reserva → 1 Asiento (vía `Asiento.reserva_id`). 1 Reserva → 1 Pago.
 
 **Transiciones de estado**:
-- `PENDIENTE → PAGADO`: al confirmar el ADMIN el pago asociado (FR-012).
+- `PENDIENTE → PAGADO`: al confirmar el ADMIN el pago asociado (FR-012), o de inmediato en una venta en efectivo (FR-036).
 - `PENDIENTE → EXPIRADA`: al vencer el plazo de 30 minutos sin pago confirmado (FR-011).
 - `PENDIENTE → RECHAZADA`: al rechazar el ADMIN el pago asociado; libera el Asiento (vuelve a `LIBRE`) (FR-032).
+
+**Historial (derivado, no persistido)**: una Reserva se considera "histórica" (FR-033/FR-034) cuando `estado = PAGADO` y `viaje.fecha` es anterior a la fecha actual. No hay columna `archivada` para Reserva: se calcula en el momento de la consulta sobre las columnas ya existentes (`estado`, y `fecha` del Viaje relacionado).
 
 **Regla de acceso**: solo el `Usuario` propietario (`usuario_id`) o un `ADMIN` pueden ver el
 detalle de una Reserva, incluyendo nombre y DNI de los pasajeros (FR-019).
@@ -105,9 +107,9 @@ Registro del intento de cobro de una Reserva.
 |---|---|---|
 | id | bigint, PK | autogenerado |
 | reserva_id | bigint, FK → Reserva | obligatorio, único (una Reserva tiene un único Pago) |
-| metodo | enum(`YAPE`, `PLIN`) | obligatorio |
+| metodo | enum(`YAPE`, `PLIN`, `EFECTIVO`) | obligatorio |
 | estado | enum(`PENDIENTE`, `CONFIRMADO`, `RECHAZADO`) | obligatorio, por defecto `PENDIENTE` |
-| referencia | varchar(50) | obligatorio; número/código de operación ingresado por el pasajero |
+| referencia | varchar(50) | obligatorio; para `YAPE`/`PLIN` debe tener exactamente 8 dígitos numéricos (validado en `PagoForm`, no en la entidad); para `EFECTIVO` se guarda un valor fijo ("EFECTIVO"), ya que no existe número de operación real |
 | motivoRechazo | varchar(255) | nulo salvo que `estado = RECHAZADO`; texto libre opcional ingresado por el ADMIN |
 
 **Transiciones de estado**:

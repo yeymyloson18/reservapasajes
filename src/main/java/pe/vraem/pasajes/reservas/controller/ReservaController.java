@@ -1,5 +1,6 @@
 package pe.vraem.pasajes.reservas.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ import pe.vraem.pasajes.auth.model.Usuario;
 import pe.vraem.pasajes.auth.service.UsuarioActualProvider;
 import pe.vraem.pasajes.pagos.model.Pago;
 import pe.vraem.pasajes.pagos.repository.PagoRepository;
+import pe.vraem.pasajes.reservas.model.EstadoReserva;
 import pe.vraem.pasajes.reservas.model.Reserva;
 import pe.vraem.pasajes.reservas.service.AsientoNoDisponibleException;
 import pe.vraem.pasajes.reservas.service.ReservaService;
@@ -52,7 +54,16 @@ public class ReservaController {
     @GetMapping("/reservas")
     public String misReservas(Authentication authentication, Model model) {
         Usuario usuarioActual = usuarioActualProvider.obtener(authentication);
-        model.addAttribute("reservas", reservaService.listarPorUsuario(usuarioActual));
+        List<Reserva> reservas = reservaService.listarPorUsuario(usuarioActual);
+
+        LocalDate hoy = LocalDate.now();
+        List<Reserva> historial = reservas.stream()
+                .filter(r -> r.getEstado() == EstadoReserva.PAGADO && r.getViaje().getFecha().isBefore(hoy))
+                .toList();
+
+        model.addAttribute("reservas", reservas);
+        model.addAttribute("historial", historial);
+        model.addAttribute("totalViajes", historial.size());
         return "reservas/mis-reservas";
     }
 

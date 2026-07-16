@@ -5,6 +5,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
@@ -29,6 +30,7 @@ import pe.vraem.pasajes.auth.model.Rol;
 import pe.vraem.pasajes.auth.model.Usuario;
 import pe.vraem.pasajes.auth.repository.UsuarioRepository;
 import pe.vraem.pasajes.reservas.model.EstadoReserva;
+import pe.vraem.pasajes.reservas.model.Reserva;
 import pe.vraem.pasajes.reservas.repository.ReservaRepository;
 import pe.vraem.pasajes.viajes.model.Asiento;
 import pe.vraem.pasajes.viajes.model.Camioneta;
@@ -155,6 +157,39 @@ class ReservaControllerIT {
                 .filter(r -> r.getViaje().getId().equals(viaje.getId()) && r.getEstado() == EstadoReserva.PENDIENTE)
                 .count();
         assertThat(reservasParaEsteAsiento).isEqualTo(1);
+    }
+
+    @Test
+    void misReservasMuestraElHistorialDeViajesPagados() throws Exception {
+        Usuario pasajero = crearPasajero("22223333", "historial@example.com");
+
+        Camioneta camionetaPasada = camionetaRepository.save(new Camioneta("HIS-001", "Ayacucho - Santa Rosa"));
+        Viaje viajePasado = viajeRepository.save(new Viaje("Ayacucho", "Santa Rosa", LocalDate.now().minusDays(10),
+                LocalTime.of(8, 0), camionetaPasada, new BigDecimal("30.00"), "Carlos Mamani"));
+        Asiento asientoPasado = asientoRepository.save(new Asiento(viajePasado, 1));
+
+        Reserva reservaPasada = new Reserva(pasajero, viajePasado, new BigDecimal("30.00"));
+        reservaPasada.asignarCodigoReserva("HISTORIC");
+        reservaPasada.marcarPagada();
+        reservaPasada = reservaRepository.save(reservaPasada);
+        asientoPasado.ocupar(reservaPasada, "Usuario 22223333", "22223333");
+        asientoPasado.marcarPagado();
+        asientoRepository.save(asientoPasado);
+
+        Viaje viajeFuturo = crearViajeConAsientos();
+        Asiento asientoFuturo = asientoRepository.findAllByViajeOrderByNumeroAsc(viajeFuturo).get(0);
+        mockMvc.perform(post("/viajes/{id}/asientos/{asientoId}", viajeFuturo.getId(), asientoFuturo.getId())
+                        .with(csrf())
+                        .with(user(pasajero.getEmail()).authorities(new SimpleGrantedAuthority("ROLE_PASAJERO")))
+                        .param("nombrePasajero", "Usuario 22223333")
+                        .param("dniPasajero", "22223333"))
+                .andExpect(status().is3xxRedirection());
+
+        mockMvc.perform(get("/reservas")
+                        .with(user(pasajero.getEmail()).authorities(new SimpleGrantedAuthority("ROLE_PASAJERO"))))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Has viajado")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Santa Rosa")));
     }
 
     private void ejecutarIntentoDeReserva(Viaje viaje, Asiento asiento, Usuario usuario, CountDownLatch listos,

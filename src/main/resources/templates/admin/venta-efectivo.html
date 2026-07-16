@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Venta en efectivo - Panel ADMIN - Pasajes VRAEM</title>
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: nav}"></nav>
+
+    <main class="container" style="max-width: 560px;">
+        <p class="mb-2"><a th:href="@{/admin/viajes}">&larr; Volver a gestionar viajes</a></p>
+
+        <h1 class="h3 mb-1">Venta en efectivo</h1>
+        <p class="text-muted mb-4">
+            <span th:text="${viaje.origen + ' &rarr; ' + viaje.destino}">Ruta</span> &middot;
+            <span th:text="${viaje.fecha}">2026-01-01</span> <span th:text="${viaje.hora}">08:00</span> &middot;
+            S/ <span th:text="${viaje.precio}">0.00</span> por asiento
+        </p>
+
+        <div th:if="${errorGeneral}" class="alert alert-danger" th:text="${errorGeneral}"></div>
+
+        <h2 class="h5 mb-3">Elige el asiento del cliente</h2>
+        <p class="small text-muted">
+            <span class="badge bg-success">Libre</span>
+            <span class="badge bg-secondary">Ocupado</span>
+            &mdash; Haz clic en un asiento libre para registrar la venta en efectivo.
+        </p>
+
+        <div class="border rounded p-3 mb-4" style="max-width: 320px; margin: 0 auto; background: #f8f9fa;">
+
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-4">
+                <div class="text-center" style="width: 70px;">
+                    <div style="font-size: 1.8rem;">&#128100;</div>
+                    <small class="text-muted">Chofer</small>
+                </div>
+
+                <a th:if="${asientoAdelante.estado.name() == 'LIBRE'}"
+                   th:href="@{/admin/viajes/{id}/asientos/{asientoId}/venta-efectivo(id=${viaje.id},asientoId=${asientoAdelante.id})}"
+                   class="btn btn-success text-center" style="width: 90px; height: 70px;">
+                    <div>Adelante</div>
+                    <small th:text="'Asiento ' + ${asientoAdelante.numero}">Asiento 1</small><br />
+                    <small>LIBRE</small>
+                </a>
+                <div th:unless="${asientoAdelante.estado.name() == 'LIBRE'}"
+                     class="btn btn-secondary disabled text-center" style="width: 90px; height: 70px;">
+                    <div>Adelante</div>
+                    <small th:text="'Asiento ' + ${asientoAdelante.numero}">Asiento 1</small><br />
+                    <small>OCUPADO</small>
+                </div>
+            </div>
+
+            <p class="text-center small text-muted mb-2">Atras</p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <th:block th:each="asiento : ${asientosAtras}">
+                    <a th:if="${asiento.estado.name() == 'LIBRE'}"
+                       th:href="@{/admin/viajes/{id}/asientos/{asientoId}/venta-efectivo(id=${viaje.id},asientoId=${asiento.id})}"
+                       class="btn btn-success text-center" style="width: 90px; height: 70px;">
+                        <div>Atras</div>
+                        <small th:text="'Asiento ' + ${asiento.numero}">Asiento 2</small><br />
+                        <small>LIBRE</small>
+                    </a>
+                    <div th:unless="${asiento.estado.name() == 'LIBRE'}"
+                         class="btn btn-secondary disabled text-center" style="width: 90px; height: 70px;">
+                        <div>Atras</div>
+                        <small th:text="'Asiento ' + ${asiento.numero}">Asiento 2</small><br />
+                        <small>OCUPADO</small>
+                    </div>
+                </th:block>
+            </div>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

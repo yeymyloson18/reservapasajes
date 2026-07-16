@@ -213,6 +213,20 @@ description: "Task list for Reserva de Pasajes de Bus VRAEM"
 
 ---
 
+## Phase 11: Historial, navegación de boleto, venta en efectivo, referencia y sesión única (2026-07-16)
+
+**Purpose**: El usuario reportó 10 requisitos numerados 6-15 (los puntos 14 y 15 ya estaban satisfechos por la Fase 10). Decisiones confirmadas antes de programar (ver Clarifications de spec.md, sesión "historial, navegación de boleto, venta en efectivo, referencia y sesión única"): historial calculado al vuelo sin campo nuevo; venta en efectivo registrada bajo la cuenta del ADMIN; sesión única por cuenta vía el mecanismo estándar de Spring Security.
+
+- [X] T084 [P] Historial del pasajero: `ReservaController.misReservas(...)` calcula `historial` (reservas `PAGADO` con `viaje.fecha` pasada) y `totalViajes`; `reservas/mis-reservas.html` agrega la sección "Historial de viajes" (fechas + total) y un botón "Ver boleta" explícito para reservas `PAGADO` (FR-033, FR-034).
+- [X] T085 [P] Navegación de boleto: `reservas/detalle.html` agrega el botón "Volver al menú principal" (sensible al rol, distinto del "← Volver" con `history.back()` ya existente) en la tarjeta de comprobante pendiente y en la de boleto pagado (FR-035).
+- [X] T086 Venta presencial en efectivo: `MetodoPago.EFECTIVO` nuevo; `PagoController` agrega `GET /admin/viajes/{id}/venta-efectivo` (mapa de asientos), `GET`/`POST /admin/viajes/{id}/asientos/{asientoId}/venta-efectivo` (confirmar nombre/DNI y ejecutar `crearReserva` + `registrarPago(EFECTIVO)` + `confirmarPago` en un solo flujo, sin pasar por "pendiente"); nuevas vistas `admin/venta-efectivo.html` y `admin/venta-efectivo-confirmar.html`; enlace "Vender en efectivo" en `admin/gestionar-viajes.html` para viajes no completos (FR-036).
+- [X] T087 [P] Validación de referencia: `PagoForm.referencia` cambia a `@Pattern(\\d{8})`; `pagos/formulario.html` agrega `maxlength`/`inputmode`/ayuda; se actualizan las referencias de prueba existentes en `PagoControllerIT` a 8 dígitos (FR-037).
+- [X] T088 Sesión única por cuenta: `SecurityConfig` agrega beans `SessionRegistry`/`HttpSessionEventPublisher` y `sessionManagement().maximumSessions(1).maxSessionsPreventsLogin(false).expiredUrl("/login?expired")`; `auth/login.html` agrega el mensaje `param.expired` (FR-038).
+- [X] T089 Tests nuevos: `ReservaControllerIT.misReservasMuestraElHistorialDeViajesPagados`, `PagoControllerIT.ventaEnEfectivoConfirmaElPagoAlInstante`, `AuthControllerIT.unSegundoLoginInvalidaLaSesionAnterior`.
+- [X] T090 Actualizar `spec.md` (FR-033 a FR-038, Edge Cases, Key Entities, Assumptions) y `data-model.md` (`MetodoPago.EFECTIVO`, historial derivado sin columna nueva).
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

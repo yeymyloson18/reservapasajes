@@ -38,7 +38,9 @@
             </div>
             <div class="mb-3">
                 <label class="form-label" for="referencia">Numero / codigo de operacion</label>
-                <input type="text" class="form-control" id="referencia" th:field="*{referencia}" />
+                <input type="text" class="form-control" id="referencia" th:field="*{referencia}"
+                       maxlength="8" inputmode="numeric" pattern="\d{8}" />
+                <div class="form-text">Exactamente 8 digitos numericos.</div>
                 <div class="text-danger small" th:if="${#fields.hasErrors('referencia')}" th:errors="*{referencia}"></div>
             </div>
             <button type="submit" class="btn btn-primary w-100">Registrar pago</button>
