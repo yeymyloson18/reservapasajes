@@ -53,17 +53,24 @@
                         <td>S/ <span th:text="${reserva.montoTotal}">0.00</span></td>
                         <td>
                             <span class="badge"
-                                  th:classappend="${reserva.estado.name() == 'PAGADO'} ? 'bg-success' : (${reserva.estado.name() == 'PENDIENTE'} ? 'bg-warning text-dark' : 'bg-secondary')"
+                                  th:classappend="${reserva.estado.name() == 'PAGADO'} ? 'bg-success' : (${reserva.estado.name() == 'PENDIENTE'} ? 'bg-warning text-dark' : (${reserva.estado.name() == 'RECHAZADA'} ? 'bg-danger' : 'bg-secondary'))"
                                   th:text="${reserva.estado}">PENDIENTE</span>
                         </td>
                         <td th:text="${reserva.fechaCreacion}">2026-01-01</td>
-                        <td>
-                            <form th:if="${reserva.estado.name() == 'PENDIENTE'}"
-                                  th:action="@{/admin/reservas/{id}/confirmar-pago(id=${reserva.id})}" method="post"
+                        <td th:if="${reserva.estado.name() == 'PENDIENTE'}">
+                            <form th:action="@{/admin/reservas/{id}/confirmar-pago(id=${reserva.id})}" method="post"
+                                  class="mb-1"
                                   th:attr="onsubmit=|return confirm('¿Confirmar el pago de la reserva ${reserva.codigoReserva}?')|">
                                 <button type="submit" class="btn btn-sm btn-success">Confirmar pago</button>
                             </form>
+                            <form th:action="@{/admin/reservas/{id}/rechazar-pago(id=${reserva.id})}" method="post"
+                                  class="d-flex gap-1"
+                                  th:attr="onsubmit=|return confirm('¿Rechazar el pago de la reserva ${reserva.codigoReserva}? El asiento quedara libre.')|">
+                                <input type="text" name="motivo" class="form-control form-control-sm" placeholder="Motivo (opcional)" style="max-width:140px;" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Rechazar pago</button>
+                            </form>
                         </td>
+                        <td th:unless="${reserva.estado.name() == 'PENDIENTE'}"></td>
                     </tr>
                 </tbody>
             </table>

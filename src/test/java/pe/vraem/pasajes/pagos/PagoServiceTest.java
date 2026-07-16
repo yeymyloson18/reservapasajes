@@ -34,6 +34,7 @@ import pe.vraem.pasajes.viajes.model.Camioneta;
 import pe.vraem.pasajes.viajes.model.EstadoAsiento;
 import pe.vraem.pasajes.viajes.model.Viaje;
 import pe.vraem.pasajes.viajes.repository.AsientoRepository;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class PagoServiceTest {
@@ -99,5 +100,32 @@ class PagoServiceTest {
         assertThat(pago.getEstado()).isEqualTo(EstadoPago.CONFIRMADO);
         assertThat(reserva.getEstado()).isEqualTo(EstadoReserva.PAGADO);
         assertThat(asiento.getEstado()).isEqualTo(EstadoAsiento.PAGADO);
+    }
+
+    @Test
+    void rechazarPagoLiberaElAsientoYMarcaLaReservaRechazada() {
+        Pago pago = new Pago(reserva, MetodoPago.YAPE, "OP-12345");
+        when(pagoRepository.findByReserva(reserva)).thenReturn(Optional.of(pago));
+        when(pagoRepository.save(any(Pago.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(reservaRepository.save(any(Reserva.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(asientoRepository.findAllByReserva(reserva)).thenReturn(List.of(asiento));
+
+        pagoService.rechazarPago(reserva, "referencia invalida");
+
+        assertThat(pago.getEstado()).isEqualTo(EstadoPago.RECHAZADO);
+        assertThat(pago.getMotivoRechazo()).isEqualTo("referencia invalida");
+        assertThat(reserva.getEstado()).isEqualTo(EstadoReserva.RECHAZADA);
+        assertThat(asiento.getEstado()).isEqualTo(EstadoAsiento.LIBRE);
+        assertThat(asiento.getReserva()).isNull();
+    }
+
+    @Test
+    void rechazaRechazarPagoParaUnaReservaNoPendiente() {
+        reserva.marcarPagada();
+
+        assertThatThrownBy(() -> pagoService.rechazarPago(reserva, null))
+                .isInstanceOf(PagoInvalidoException.class);
+
+        verify(reservaRepository, org.mockito.Mockito.never()).save(any(Reserva.class));
     }
 }

@@ -199,6 +199,20 @@ description: "Task list for Reserva de Pasajes de Bus VRAEM"
 
 ---
 
+## Phase 10: Rechazo de pago (2026-07-16)
+
+**Purpose**: El usuario pidió agregar la contraparte de "Confirmar pago": el ADMIN puede rechazar un pago pendiente (motivo opcional), liberando el asiento y avisando al pasajero (ver Clarifications de spec.md, sesión "rechazo de pago").
+
+- [X] T077 [P] `EstadoReserva.RECHAZADA` y `EstadoPago.RECHAZADO` nuevos; `Reserva.marcarRechazada()`, `Pago.rechazar(motivo)` y campo `Pago.motivoRechazo` (nullable) (FR-032).
+- [X] T078 `PagoService.rechazarPago(reserva, motivo)`: valida que la reserva este `PENDIENTE`, marca el `Pago` (si existe) como `RECHAZADO` con su motivo, marca la `Reserva` como `RECHAZADA`, y libera (`Asiento.liberar()`) los asientos asociados (FR-032).
+- [X] T079 `PagoController`: nuevo `POST /admin/reservas/{id}/rechazar-pago` (parametro `motivo` opcional), restringido a ADMIN.
+- [X] T080 [P] `admin/listado-reservas.html`: boton "Rechazar pago" junto a "Confirmar pago" (con campo de texto opcional para el motivo) cuando la reserva esta `PENDIENTE`; badge `RECHAZADA` en rojo.
+- [X] T081 [P] `reservas/detalle.html` y `reservas/mis-reservas.html`: aviso al pasajero cuando su reserva esta `RECHAZADA`, mostrando el motivo si el ADMIN lo indico.
+- [X] T082 Tests: `PagoServiceTest` (rechazo libera asiento y marca reserva/pago; rechaza si la reserva no esta pendiente), `PagoControllerIT` (flujo completo: pagar → rechazar → asiento libre → el pasajero ve el motivo).
+- [X] T083 Actualizar `spec.md` (FR-032, Edge Cases, Key Entities) y `data-model.md` (`EstadoReserva.RECHAZADA`, `EstadoPago.RECHAZADO`, `Pago.motivoRechazo`).
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

@@ -21,7 +21,7 @@
                     &mdash; <span th:text="${reserva.viaje.fecha}">2026-01-01</span>
                 </span>
                 <span class="badge"
-                      th:classappend="${reserva.estado.name() == 'PAGADO'} ? 'bg-success' : (${reserva.estado.name() == 'PENDIENTE'} ? 'bg-warning text-dark' : 'bg-secondary')"
+                      th:classappend="${reserva.estado.name() == 'PAGADO'} ? 'bg-success' : (${reserva.estado.name() == 'PENDIENTE'} ? 'bg-warning text-dark' : (${reserva.estado.name() == 'RECHAZADA'} ? 'bg-danger' : 'bg-secondary'))"
                       th:text="${reserva.estado}">PENDIENTE</span>
             </a>
         </div>

@@ -99,4 +99,45 @@ class PagoControllerIT {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Ana Quispe")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("45679001")));
     }
+
+    @Test
+    void rechazarPagoLiberaElAsientoYAvisaAlPasajero() throws Exception {
+        Camioneta camioneta = camionetaRepository.save(new Camioneta("PGO-002", "Ayacucho - Sivia"));
+        Viaje viaje = viajeRepository.save(new Viaje("Ayacucho", "Sivia", LocalDate.now().plusDays(3),
+                LocalTime.of(9, 0), camioneta, new BigDecimal("40.00"), "Carlos Mamani"));
+        Asiento asiento = asientoRepository.save(new Asiento(viaje, 1));
+
+        Usuario comprador = usuarioRepository.save(new Usuario("45679002", "Luis Rojas", "rechazo-comprador@example.com",
+                passwordEncoder.encode("claveSegura1"), Rol.PASAJERO));
+        Usuario admin = usuarioRepository.save(new Usuario("99998877", "Admin Rechazo", "rechazo-admin@example.com",
+                passwordEncoder.encode("claveSegura1"), Rol.ADMIN));
+
+        Reserva reserva = new Reserva(comprador, viaje, new BigDecimal("40.00"));
+        reserva.asignarCodigoReserva("RECHAZAD");
+        reserva = reservaRepository.save(reserva);
+        asiento.ocupar(reserva, "Luis Rojas", "45679002");
+        asientoRepository.save(asiento);
+
+        mockMvc.perform(post("/reservas/{id}/pago", reserva.getId())
+                        .with(csrf())
+                        .with(user(comprador.getEmail()).authorities(new SimpleGrantedAuthority("ROLE_PASAJERO")))
+                        .param("metodo", "PLIN")
+                        .param("referencia", "OP-000111"))
+                .andExpect(status().is3xxRedirection());
+
+        mockMvc.perform(post("/admin/reservas/{id}/rechazar-pago", reserva.getId())
+                        .with(csrf())
+                        .with(user(admin.getEmail()).authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .param("motivo", "referencia invalida"))
+                .andExpect(status().is3xxRedirection());
+
+        Asiento asientoLiberado = asientoRepository.findById(asiento.getId()).orElseThrow();
+        assertThat(asientoLiberado.getEstado()).isEqualTo(EstadoAsiento.LIBRE);
+
+        mockMvc.perform(get("/reservas/{id}", reserva.getId())
+                        .with(user(comprador.getEmail()).authorities(new SimpleGrantedAuthority("ROLE_PASAJERO"))))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("rechazado")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("referencia invalida")));
+    }
 }

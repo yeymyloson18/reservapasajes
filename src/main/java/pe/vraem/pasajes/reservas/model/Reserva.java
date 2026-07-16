@@ -76,6 +76,10 @@ public class Reserva {
         this.estado = EstadoReserva.EXPIRADA;
     }
 
+    public void marcarRechazada() {
+        this.estado = EstadoReserva.RECHAZADA;
+    }
+
     public boolean perteneceA(Usuario usuario) {
         return this.usuario.getId().equals(usuario.getId());
     }

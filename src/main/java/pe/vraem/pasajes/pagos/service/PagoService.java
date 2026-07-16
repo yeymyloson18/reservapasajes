@@ -65,4 +65,28 @@ public class PagoService {
         asientos.forEach(Asiento::marcarPagado);
         asientoRepository.saveAll(asientos);
     }
+
+    /**
+     * Rechaza manualmente el pago (accion del ADMIN): libera el asiento (vuelve a
+     * LIBRE) y transiciona la Reserva a RECHAZADA, para que el pasajero pueda
+     * intentar reservar de nuevo.
+     */
+    @Transactional
+    public void rechazarPago(Reserva reserva, String motivo) {
+        if (reserva.getEstado() != EstadoReserva.PENDIENTE) {
+            throw new PagoInvalidoException("Solo se puede rechazar el pago de una reserva pendiente");
+        }
+
+        pagoRepository.findByReserva(reserva).ifPresent(pago -> {
+            pago.rechazar(motivo);
+            pagoRepository.save(pago);
+        });
+
+        reserva.marcarRechazada();
+        reservaRepository.save(reserva);
+
+        List<Asiento> asientos = asientoRepository.findAllByReserva(reserva);
+        asientos.forEach(Asiento::liberar);
+        asientoRepository.saveAll(asientos);
+    }
 }

@@ -44,6 +44,12 @@ El usuario probó el sistema por tercera vez y reportó 13 puntos pendientes. An
 
 Se confirmó además que los siguientes puntos reportados ya estaban satisfechos por el diseño existente y no requirieron cambios: reservar tantos pasajes como se quiera (cada Reserva es de un asiento, se repite el flujo por cada uno); el estado "pendiente" hasta que el ADMIN confirme el pago (comportamiento ya vigente); y que el ADMIN nunca pueda editar ni eliminar los datos de un pasajero de una reserva ya creada (esa funcionalidad nunca existió y el archivado de viajes no la introduce).
 
+### Session 2026-07-16 (rechazo de pago)
+
+El usuario pidió agregar la contraparte de "Confirmar pago": la posibilidad de que el ADMIN rechace un pago cuando la referencia no es válida u otro motivo, liberando el asiento y avisando al pasajero.
+
+- Q: ¿El ADMIN debe poder escribir un motivo de rechazo visible para el pasajero? → A: Sí, motivo de texto libre y opcional; si se deja vacío, el pasajero ve un mensaje genérico.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Comprar un pasaje de principio a fin (Priority: P1)
@@ -118,6 +124,7 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - ¿Qué ocurre si un usuario ingresa una contraseña incorrecta 5 veces seguidas? La cuenta queda bloqueada (incluso si luego ingresa la contraseña correcta) hasta que recupera su contraseña, momento en el que el bloqueo se levanta automáticamente.
 - ¿Qué ocurre si el ADMIN intenta archivar un viaje que todavía tiene asientos libres? El sistema rechaza la acción e indica que solo se pueden archivar viajes sin asientos libres.
 - ¿Qué ocurre con las reservas y pasajeros de un viaje archivado? Se conservan intactos y siguen siendo consultables desde "Ver archivados"; el archivado nunca borra ni permite editar datos de pasajeros.
+- ¿Qué ocurre si el ADMIN rechaza el pago de una reserva pendiente? La reserva pasa a estado "rechazada", el asiento vuelve a "libre" para que otro pasajero pueda reservarlo, y el pasajero ve el motivo (si el ADMIN lo indicó) al consultar esa reserva.
 
 ## Requirements *(mandatory)*
 
@@ -154,6 +161,7 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - **FR-029**: El sistema MUST notificar al ADMIN, en su panel principal, cuando existan reservas pendientes de confirmar pago, con un enlace directo al listado de reservas para revisarlas.
 - **FR-030**: El sistema MUST permitir al ADMIN archivar manualmente un viaje únicamente cuando no tenga asientos libres (esté "COMPLETO"). Un viaje archivado MUST dejar de aparecer en la lista de viajes disponibles para pasajeros y en "Gestionar viajes", pero MUST seguir siendo consultable (junto con sus reservas y pasajeros) desde una vista de viajes archivados. El archivado MUST NOT eliminar ni permitir editar los datos de los pasajeros de las reservas asociadas.
 - **FR-031**: El sistema MUST ofrecer, en las pantallas de pago y de detalle de boleto/reserva, un control de "volver" que regrese a la pantalla anterior real del navegador, en vez de dirigir siempre a un destino fijo.
+- **FR-032**: El sistema MUST permitir al ADMIN rechazar el pago de una reserva pendiente, indicando opcionalmente un motivo en texto libre. Al rechazar, el sistema MUST liberar el asiento asociado (vuelve a "libre") y MUST cambiar el estado de la reserva a "rechazada", permitiendo al pasajero volver a intentar reservar. El pasajero MUST poder ver, al consultar esa reserva, que su pago fue rechazado y el motivo indicado por el ADMIN (si lo hubo).
 
 ### Key Entities
 
@@ -161,8 +169,8 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - **Camioneta (vehículo, también referido como "bus")**: Unidad de transporte asignada a los viajes; atributos: identificador, placa, ruta que cubre habitualmente. "Bus" y "Camioneta" se usan como sinónimos en este documento; la entidad canónica es `Camioneta`.
 - **Viaje**: Salida programada entre dos puntos del recorrido Ayacucho-VRAEM; atributos: origen, destino, fecha (no anterior a hoy), hora, camioneta asignada, chofer (nombre, campo de texto simple), precio por asiento, archivado (indica si el ADMIN lo sacó de las listas activas tras llenarse). Siempre tiene exactamente 4 Asientos (fijo, no configurable). Se relaciona con múltiples Asientos y puede tener múltiples Reservas.
 - **Asiento**: Unidad reservable dentro de un viaje; atributos: número (1 a 4), posición (el asiento 1 va adelante junto al chofer; los asientos 2-4 van juntos atrás; se deriva del número, no es un campo separado), estado (libre/reservado/pagado); pertenece a un único Viaje.
-- **Reserva**: Solicitud de un asiento hecha por un Usuario para un Viaje; atributos: usuario comprador, viaje, asiento elegido (con nombre y DNI del pasajero que viajará), monto total (= precio del viaje), estado (pendiente/pagado/expirada), fecha de creación. Se relaciona con un Pago. Cada Reserva cubre exactamente un Asiento; un pasajero que quiere varios asientos crea varias Reservas.
-- **Pago**: Registro del intento de cobro de una Reserva; atributos: método (Yape o Plin), estado, referencia/número de operación; pertenece a una única Reserva.
+- **Reserva**: Solicitud de un asiento hecha por un Usuario para un Viaje; atributos: usuario comprador, viaje, asiento elegido (con nombre y DNI del pasajero que viajará), monto total (= precio del viaje), estado (pendiente/pagado/expirada/rechazada), fecha de creación. Se relaciona con un Pago. Cada Reserva cubre exactamente un Asiento; un pasajero que quiere varios asientos crea varias Reservas.
+- **Pago**: Registro del intento de cobro de una Reserva; atributos: método (Yape o Plin), estado (pendiente/confirmado/rechazado), referencia/número de operación, motivo de rechazo (texto libre, opcional, solo cuando el ADMIN rechaza el pago); pertenece a una única Reserva.
 
 ## Success Criteria *(mandatory)*
 

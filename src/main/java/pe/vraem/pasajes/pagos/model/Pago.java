@@ -41,6 +41,9 @@ public class Pago {
     @Column(nullable = false, length = 50)
     private String referencia;
 
+    @Column(name = "motivo_rechazo", length = 255)
+    private String motivoRechazo;
+
     protected Pago() {
         // JPA
     }
@@ -54,6 +57,11 @@ public class Pago {
 
     public void confirmar() {
         this.estado = EstadoPago.CONFIRMADO;
+    }
+
+    public void rechazar(String motivo) {
+        this.estado = EstadoPago.RECHAZADO;
+        this.motivoRechazo = motivo;
     }
 
     public Long getId() {
@@ -74,5 +82,9 @@ public class Pago {
 
     public String getReferencia() {
         return referencia;
+    }
+
+    public String getMotivoRechazo() {
+        return motivoRechazo;
     }
 }

@@ -45,6 +45,12 @@
             Esta reserva expiro por falta de pago y los asientos fueron liberados.
         </div>
 
+        <div th:if="${reserva.estado.name() == 'RECHAZADA'}" class="alert alert-danger">
+            Tu pago fue rechazado por el administrador
+            <span th:if="${pago != null and pago.motivoRechazo != null}">: <strong th:text="${pago.motivoRechazo}">motivo</strong></span>.
+            El asiento quedo libre; puedes intentar reservar de nuevo. <a th:href="@{/viajes}">Ver viajes disponibles</a>.
+        </div>
+
         <h2 class="h5">Viaje</h2>
         <p>
             <span th:text="${reserva.viaje.origen + ' &rarr; ' + reserva.viaje.destino}">Ruta</span><br />

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import pe.vraem.pasajes.auth.model.Usuario;
@@ -86,6 +87,19 @@ public class PagoController {
         try {
             pagoService.confirmarPago(reserva);
             redirectAttributes.addFlashAttribute("exito", "Pago confirmado. El boleto ya esta disponible para el pasajero.");
+        } catch (PagoInvalidoException ex) {
+            redirectAttributes.addFlashAttribute("errorGeneral", ex.getMessage());
+        }
+        return "redirect:/admin/reservas";
+    }
+
+    @PostMapping("/admin/reservas/{id}/rechazar-pago")
+    public String rechazarPago(@PathVariable Long id, @RequestParam(required = false) String motivo,
+            RedirectAttributes redirectAttributes) {
+        Reserva reserva = reservaService.obtenerPorId(id);
+        try {
+            pagoService.rechazarPago(reserva, motivo != null && !motivo.isBlank() ? motivo : null);
+            redirectAttributes.addFlashAttribute("exito", "Pago rechazado. El asiento quedo libre nuevamente.");
         } catch (PagoInvalidoException ex) {
             redirectAttributes.addFlashAttribute("errorGeneral", ex.getMessage());
         }

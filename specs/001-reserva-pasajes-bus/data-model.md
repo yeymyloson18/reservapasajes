@@ -83,7 +83,7 @@ un Asiento; un pasajero que quiere varios asientos crea varias Reservas (una por
 | usuario_id | bigint, FK → Usuario | obligatorio (comprador; puede reservar para terceros) |
 | viaje_id | bigint, FK → Viaje | obligatorio |
 | montoTotal | decimal(10,2) | obligatorio; = precio del viaje (una reserva = un asiento) |
-| estado | enum(`PENDIENTE`, `PAGADO`, `EXPIRADA`) | obligatorio, por defecto `PENDIENTE` |
+| estado | enum(`PENDIENTE`, `PAGADO`, `EXPIRADA`, `RECHAZADA`) | obligatorio, por defecto `PENDIENTE` |
 | fechaCreacion | datetime | obligatorio, autogenerado |
 | codigoReserva | varchar(8) | único, generado al crear la reserva |
 
@@ -92,6 +92,7 @@ un Asiento; un pasajero que quiere varios asientos crea varias Reservas (una por
 **Transiciones de estado**:
 - `PENDIENTE → PAGADO`: al confirmar el ADMIN el pago asociado (FR-012).
 - `PENDIENTE → EXPIRADA`: al vencer el plazo de 30 minutos sin pago confirmado (FR-011).
+- `PENDIENTE → RECHAZADA`: al rechazar el ADMIN el pago asociado; libera el Asiento (vuelve a `LIBRE`) (FR-032).
 
 **Regla de acceso**: solo el `Usuario` propietario (`usuario_id`) o un `ADMIN` pueden ver el
 detalle de una Reserva, incluyendo nombre y DNI de los pasajeros (FR-019).
@@ -105,11 +106,13 @@ Registro del intento de cobro de una Reserva.
 | id | bigint, PK | autogenerado |
 | reserva_id | bigint, FK → Reserva | obligatorio, único (una Reserva tiene un único Pago) |
 | metodo | enum(`YAPE`, `PLIN`) | obligatorio |
-| estado | enum(`PENDIENTE`, `CONFIRMADO`) | obligatorio, por defecto `PENDIENTE` |
+| estado | enum(`PENDIENTE`, `CONFIRMADO`, `RECHAZADO`) | obligatorio, por defecto `PENDIENTE` |
 | referencia | varchar(50) | obligatorio; número/código de operación ingresado por el pasajero |
+| motivoRechazo | varchar(255) | nulo salvo que `estado = RECHAZADO`; texto libre opcional ingresado por el ADMIN |
 
 **Transiciones de estado**:
 - `PENDIENTE → CONFIRMADO`: acción manual del ADMIN, que dispara la transición de `Reserva` y sus `Asiento`s a `PAGADO` (FR-012).
+- `PENDIENTE → RECHAZADO`: acción manual del ADMIN, que dispara la transición de `Reserva` a `RECHAZADA` y del `Asiento` asociado a `LIBRE` (FR-032).
 
 ## Diagrama de relaciones (resumen)
 
