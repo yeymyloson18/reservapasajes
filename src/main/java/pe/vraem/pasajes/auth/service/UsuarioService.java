@@ -51,6 +51,7 @@ public class UsuarioService {
 
         String passwordTemporal = generarPasswordTemporal();
         usuario.actualizarPasswordHash(passwordEncoder.encode(passwordTemporal));
+        usuario.resetearIntentosFallidos();
         usuarioRepository.save(usuario);
 
         return passwordTemporal;
@@ -60,5 +61,12 @@ public class UsuarioService {
         SecureRandom random = new SecureRandom();
         int numero = 100000 + random.nextInt(900000);
         return "Vraem" + numero;
+    }
+
+    /** Cambia la contrasena del usuario autenticado desde su perfil. */
+    @Transactional
+    public void cambiarPassword(Usuario usuario, String nuevaPasswordPlano) {
+        usuario.actualizarPasswordHash(passwordEncoder.encode(nuevaPasswordPlano));
+        usuarioRepository.save(usuario);
     }
 }

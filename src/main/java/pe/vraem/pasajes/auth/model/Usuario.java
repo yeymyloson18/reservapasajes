@@ -45,6 +45,12 @@ public class Usuario {
     @Column(nullable = false, length = 20)
     private Rol rol;
 
+    /** Numero de intentos de login fallidos seguidos. Se bloquea la cuenta al llegar a {@link #INTENTOS_MAXIMOS}. */
+    @Column(name = "intentos_fallidos", nullable = false, columnDefinition = "int default 0")
+    private int intentosFallidos;
+
+    public static final int INTENTOS_MAXIMOS = 5;
+
     protected Usuario() {
         // JPA
     }
@@ -83,5 +89,17 @@ public class Usuario {
 
     public Rol getRol() {
         return rol;
+    }
+
+    public void registrarIntentoFallido() {
+        this.intentosFallidos++;
+    }
+
+    public void resetearIntentosFallidos() {
+        this.intentosFallidos = 0;
+    }
+
+    public boolean estaBloqueado() {
+        return intentosFallidos >= INTENTOS_MAXIMOS;
     }
 }

@@ -1,5 +1,7 @@
 package pe.vraem.pasajes.viajes.controller;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import org.springframework.stereotype.Controller;
@@ -29,7 +31,10 @@ public class AdminViajeController {
 
     @GetMapping
     public String gestionar(Model model) {
-        model.addAttribute("viajes", viajeService.listarTodos());
+        List<ViajeConDisponibilidad> viajes = viajeService.listarTodos().stream()
+                .map(viaje -> new ViajeConDisponibilidad(viaje, viajeService.contarAsientosLibres(viaje)))
+                .toList();
+        model.addAttribute("viajes", viajes);
         return "admin/gestionar-viajes";
     }
 
@@ -113,5 +118,22 @@ public class AdminViajeController {
             redirectAttributes.addFlashAttribute("errorGeneral", ex.getMessage());
         }
         return "redirect:/admin/viajes";
+    }
+
+    @PostMapping("/{id}/archivar")
+    public String archivar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            viajeService.archivarViaje(id);
+            redirectAttributes.addFlashAttribute("exito", "Viaje archivado correctamente.");
+        } catch (ViajeInvalidoException ex) {
+            redirectAttributes.addFlashAttribute("errorGeneral", ex.getMessage());
+        }
+        return "redirect:/admin/viajes";
+    }
+
+    @GetMapping("/archivados")
+    public String archivados(Model model) {
+        model.addAttribute("viajes", viajeService.listarArchivados());
+        return "admin/viajes-archivados";
     }
 }

@@ -3,7 +3,9 @@ package pe.vraem.pasajes.viajes;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
@@ -21,7 +23,9 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import pe.vraem.pasajes.auth.model.Rol;
 import pe.vraem.pasajes.auth.model.Usuario;
 import pe.vraem.pasajes.auth.repository.UsuarioRepository;
+import pe.vraem.pasajes.viajes.model.Asiento;
 import pe.vraem.pasajes.viajes.model.Camioneta;
+import pe.vraem.pasajes.viajes.model.EstadoAsiento;
 import pe.vraem.pasajes.viajes.model.Viaje;
 import pe.vraem.pasajes.viajes.repository.AsientoRepository;
 import pe.vraem.pasajes.viajes.repository.CamionetaRepository;
@@ -117,5 +121,36 @@ class AdminViajeControllerIT {
                 .andExpect(status().isForbidden());
 
         assertThat(camionetaRepository.findByPlaca("ADM-002")).isEmpty();
+    }
+
+    @Test
+    void archivarUnViajeCompletoLoSacaDeLaGestionActivaYLoMuestraEnArchivados() throws Exception {
+        Usuario admin = usuarioRepository.save(new Usuario("90009999", "Admin Archiva", "admin-archiva@example.com",
+                passwordEncoder.encode("claveSegura1"), Rol.ADMIN));
+
+        Camioneta camioneta = camionetaRepository.save(new Camioneta("ARC-001", "Ayacucho - Pichari"));
+        Viaje viaje = viajeRepository.save(new Viaje("Ayacucho", "Pichari", LocalDate.now().plusDays(3),
+                java.time.LocalTime.of(7, 0), camioneta, new BigDecimal("60.00"), "Carlos Mamani"));
+
+        for (int numero = 1; numero <= ViajeService.CAPACIDAD_ASIENTOS; numero++) {
+            Asiento asiento = new Asiento(viaje, numero);
+            org.springframework.test.util.ReflectionTestUtils.setField(asiento, "estado", EstadoAsiento.PAGADO);
+            asientoRepository.save(asiento);
+        }
+
+        mockMvc.perform(post("/admin/viajes/{id}/archivar", viaje.getId())
+                        .with(csrf())
+                        .with(user(admin.getEmail()).authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(status().is3xxRedirection());
+
+        assertThat(viajeRepository.findById(viaje.getId()).orElseThrow().isArchivado()).isTrue();
+
+        mockMvc.perform(get("/admin/viajes")
+                        .with(user(admin.getEmail()).authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("ARC-001"))));
+
+        mockMvc.perform(get("/admin/viajes/archivados")
+                        .with(user(admin.getEmail()).authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("ARC-001")));
     }
 }

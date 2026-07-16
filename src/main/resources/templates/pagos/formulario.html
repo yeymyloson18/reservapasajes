@@ -7,7 +7,7 @@
     <nav th:replace="~{fragments/layout :: nav}"></nav>
 
     <main class="container" style="max-width: 480px;">
-        <p class="mb-2"><a th:href="@{/reservas/{id}(id=${reserva.id})}">&larr; Volver a la reserva</a></p>
+        <p class="mb-2"><a href="#" onclick="history.back(); return false;">&larr; Volver</a></p>
 
         <div th:replace="~{fragments/layout :: pasos(3)}"></div>
 
@@ -18,6 +18,12 @@
 
         <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
         <div th:if="${errorGeneral}" class="alert alert-danger" th:text="${errorGeneral}"></div>
+
+        <div class="text-center mb-4">
+            <img th:src="'data:image/png;base64,' + ${qrCodeBase64}" alt="Codigo QR de pago" class="border rounded p-2" />
+            <p class="small text-muted mb-0">Escanea con Yape o Plin, o paga directamente al numero
+                <strong th:text="${numeroYapePlin}">989516543</strong></p>
+        </div>
 
         <form th:action="@{/reservas/{id}/pago(id=${reserva.id})}" th:object="${pagoForm}" method="post"
               onsubmit="return confirm('¿Confirmas que ya realizaste el pago con los datos ingresados?')">

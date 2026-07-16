@@ -31,6 +31,9 @@
                         <a class="nav-link" th:href="@{/registro}">Registrarse</a>
                     </li>
                     <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/perfil}">Mi perfil</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
                         <form th:action="@{/logout}" method="post" class="d-flex">
                             <span class="navbar-text text-white me-2" sec:authentication="name">usuario</span>
                             <button class="btn btn-outline-light btn-sm" type="submit">Salir</button>

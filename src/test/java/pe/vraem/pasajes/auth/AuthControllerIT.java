@@ -63,4 +63,21 @@ class AuthControllerIT {
                         .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void bloqueaLaCuentaTrasCincoIntentosFallidosAunqueLuegoUseLaClaveCorrecta() throws Exception {
+        usuarioRepository.save(new Usuario("33333333", "Usuario Bloqueable", "bloqueable@example.com",
+                passwordEncoder.encode("claveSegura1"), pe.vraem.pasajes.auth.model.Rol.PASAJERO));
+
+        for (int i = 0; i < pe.vraem.pasajes.auth.model.Usuario.INTENTOS_MAXIMOS; i++) {
+            mockMvc.perform(formLogin().user("bloqueable@example.com").password("claveMala"))
+                    .andExpect(SecurityMockMvcResultMatchers.unauthenticated());
+        }
+
+        Usuario bloqueado = usuarioRepository.findByEmail("bloqueable@example.com").orElseThrow();
+        assertThat(bloqueado.estaBloqueado()).isTrue();
+
+        mockMvc.perform(formLogin().user("bloqueable@example.com").password("claveSegura1"))
+                .andExpect(SecurityMockMvcResultMatchers.unauthenticated());
+    }
 }

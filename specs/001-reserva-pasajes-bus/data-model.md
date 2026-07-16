@@ -17,6 +17,7 @@ Cuenta que permite iniciar sesión, ya sea como pasajero comprador o como admini
 | email | varchar(150) | único, formato de email válido |
 | passwordHash | varchar(255) | obligatorio, hash BCrypt (nunca texto plano) |
 | rol | enum(`PASAJERO`, `ADMIN`) | obligatorio |
+| intentosFallidos | int | obligatorio, por defecto 0; se incrementa en cada login fallido, se resetea a 0 en un login exitoso o al recuperar la contraseña; la cuenta se considera bloqueada cuando llega a 5 (`Usuario.INTENTOS_MAXIMOS`) |
 
 ## Camioneta
 
@@ -42,6 +43,7 @@ Salida programada entre dos puntos del recorrido Ayacucho-VRAEM.
 | camioneta_id | bigint, FK → Camioneta | obligatorio |
 | precio | decimal(10,2) | obligatorio, > 0 |
 | chofer | varchar(150) | obligatorio; nombre del chofer. Campo de texto simple, sin entidad `Chofer` separada (ver Assumptions de spec.md). |
+| archivado | boolean | obligatorio, por defecto `false`; el ADMIN lo marca manualmente cuando el viaje ya no tiene asientos libres (FR-030). Un viaje archivado se excluye de la lista de viajes disponibles y de "Gestionar viajes", pero sigue siendo consultable junto con sus Reservas y Asientos. |
 
 No tiene columna `numeroAsientos`: la capacidad es fija en `ViajeService.CAPACIDAD_ASIENTOS = 4`
 (ver Assumptions de spec.md, segunda revisión). Al crear un Viaje se generan automáticamente

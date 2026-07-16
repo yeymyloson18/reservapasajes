@@ -30,7 +30,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-            RolBasedAuthenticationSuccessHandler successHandler) throws Exception {
+            RolBasedAuthenticationSuccessHandler successHandler,
+            AccountLoginFailureHandler failureHandler) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/registro", "/login", "/recuperar-password", "/webjars/**", "/css/**",
@@ -41,6 +42,7 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/login")
                         .successHandler(successHandler)
+                        .failureHandler(failureHandler)
                         .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/logout")

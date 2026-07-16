@@ -55,6 +55,10 @@ public class Viaje {
     @Column(nullable = false, length = 150)
     private String chofer;
 
+    /** Se marca cuando el viaje se llena (0 asientos libres) y el ADMIN decide archivarlo. */
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean archivado;
+
     protected Viaje() {
         // JPA
     }
@@ -128,5 +132,13 @@ public class Viaje {
 
     public void setChofer(String chofer) {
         this.chofer = chofer;
+    }
+
+    public boolean isArchivado() {
+        return archivado;
+    }
+
+    public void archivar() {
+        this.archivado = true;
     }
 }

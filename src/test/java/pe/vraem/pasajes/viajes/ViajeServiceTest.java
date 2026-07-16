@@ -96,4 +96,31 @@ class ViajeServiceTest {
         verify(viajeRepository, never()).delete(any(Viaje.class));
         verify(asientoRepository, never()).deleteAll(anyList());
     }
+
+    @Test
+    void archivarViajeRechazaSiQuedanAsientosLibres() {
+        Viaje viaje = viajeConId(1L);
+
+        when(viajeRepository.findById(1L)).thenReturn(java.util.Optional.of(viaje));
+        when(asientoRepository.countByViajeAndEstadoIn(viaje, List.of(EstadoAsiento.LIBRE))).thenReturn(1L);
+
+        assertThatThrownBy(() -> viajeService.archivarViaje(1L))
+                .isInstanceOf(ViajeInvalidoException.class);
+
+        assertThat(viaje.isArchivado()).isFalse();
+        verify(viajeRepository, never()).save(viaje);
+    }
+
+    @Test
+    void archivarViajeMarcaArchivadoCuandoEstaCompleto() {
+        Viaje viaje = viajeConId(1L);
+
+        when(viajeRepository.findById(1L)).thenReturn(java.util.Optional.of(viaje));
+        when(asientoRepository.countByViajeAndEstadoIn(viaje, List.of(EstadoAsiento.LIBRE))).thenReturn(0L);
+
+        viajeService.archivarViaje(1L);
+
+        assertThat(viaje.isArchivado()).isTrue();
+        verify(viajeRepository).save(viaje);
+    }
 }

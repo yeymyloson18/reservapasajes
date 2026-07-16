@@ -64,4 +64,15 @@ class UsuarioServiceTest {
         assertThatThrownBy(() -> usuarioService.registrar("45678912", "Ana Quispe", "ana@example.com", "claveSegura1"))
                 .isInstanceOf(RegistroDuplicadoException.class);
     }
+
+    @Test
+    void cambiarPasswordActualizaElHashYGuarda() {
+        Usuario usuario = new Usuario("45678912", "Ana Quispe", "ana@example.com", "hash-viejo", Rol.PASAJERO);
+        when(passwordEncoder.encode("NuevaClave1")).thenReturn("hash-nuevo");
+
+        usuarioService.cambiarPassword(usuario, "NuevaClave1");
+
+        assertThat(usuario.getPasswordHash()).isEqualTo("hash-nuevo");
+        org.mockito.Mockito.verify(usuarioRepository).save(usuario);
+    }
 }

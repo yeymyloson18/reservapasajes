@@ -11,7 +11,10 @@
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0">Gestionar viajes</h1>
-            <a class="btn btn-primary" th:href="@{/admin/viajes/nuevo}">+ Nuevo viaje</a>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary" th:href="@{/admin/viajes/archivados}">Ver archivados</a>
+                <a class="btn btn-primary" th:href="@{/admin/viajes/nuevo}">+ Nuevo viaje</a>
+            </div>
         </div>
 
         <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
@@ -35,7 +38,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="viaje : ${viajes}">
+                    <tr th:each="item : ${viajes}" th:with="viaje=${item.viaje()}">
                         <td th:text="${viaje.origen + ' &rarr; ' + viaje.destino}">Ruta</td>
                         <td th:text="${viaje.chofer}">Chofer</td>
                         <td th:text="${viaje.camioneta.placa}">ABC-123</td>
@@ -45,6 +48,10 @@
                         <td class="d-flex gap-2">
                             <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/viajes/{id}/editar(id=${viaje.id})}">Editar</a>
                             <a class="btn btn-sm btn-outline-secondary" th:href="@{/admin/reservas(viajeId=${viaje.id})}">Ver reservas</a>
+                            <form th:if="${item.completo()}" th:action="@{/admin/viajes/{id}/archivar(id=${viaje.id})}" method="post"
+                                  th:attr="onsubmit=|return confirm('¿Archivar el viaje ${viaje.origen} -> ${viaje.destino}? Ya no aparecera en las listas activas.')|">
+                                <button type="submit" class="btn btn-sm btn-outline-success">Archivar</button>
+                            </form>
                             <form th:action="@{/admin/viajes/{id}/eliminar(id=${viaje.id})}" method="post"
                                   th:attr="onsubmit=|return confirm('¿Eliminar el viaje ${viaje.origen} -> ${viaje.destino}?')|">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>

@@ -17,27 +17,35 @@ import pe.vraem.pasajes.auth.model.Usuario;
 import pe.vraem.pasajes.auth.service.UsuarioActualProvider;
 import pe.vraem.pasajes.pagos.service.PagoInvalidoException;
 import pe.vraem.pasajes.pagos.service.PagoService;
+import pe.vraem.pasajes.pagos.service.QrCodeGenerator;
 import pe.vraem.pasajes.reservas.model.Reserva;
 import pe.vraem.pasajes.reservas.service.ReservaService;
 
 @Controller
 public class PagoController {
 
+    /** Numero de Yape/Plin al que se debe pagar (no hay integracion real con su API). */
+    private static final String NUMERO_YAPE_PLIN = "989516543";
+
     private final PagoService pagoService;
     private final ReservaService reservaService;
     private final UsuarioActualProvider usuarioActualProvider;
+    private final QrCodeGenerator qrCodeGenerator;
 
     public PagoController(PagoService pagoService, ReservaService reservaService,
-            UsuarioActualProvider usuarioActualProvider) {
+            UsuarioActualProvider usuarioActualProvider, QrCodeGenerator qrCodeGenerator) {
         this.pagoService = pagoService;
         this.reservaService = reservaService;
         this.usuarioActualProvider = usuarioActualProvider;
+        this.qrCodeGenerator = qrCodeGenerator;
     }
 
     @GetMapping("/reservas/{id}/pago")
     public String mostrarFormulario(@PathVariable Long id, Authentication authentication, Model model) {
         Reserva reserva = obtenerReservaDelPropietario(id, authentication);
         model.addAttribute("reserva", reserva);
+        model.addAttribute("numeroYapePlin", NUMERO_YAPE_PLIN);
+        model.addAttribute("qrCodeBase64", generarQr(reserva));
         if (!model.containsAttribute("pagoForm")) {
             model.addAttribute("pagoForm", new PagoForm());
         }
@@ -52,6 +60,8 @@ public class PagoController {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("reserva", reserva);
+            model.addAttribute("numeroYapePlin", NUMERO_YAPE_PLIN);
+            model.addAttribute("qrCodeBase64", generarQr(reserva));
             return "pagos/formulario";
         }
 
@@ -59,6 +69,8 @@ public class PagoController {
             pagoService.registrarPago(reserva, pagoForm.getMetodo(), pagoForm.getReferencia());
         } catch (PagoInvalidoException ex) {
             model.addAttribute("reserva", reserva);
+            model.addAttribute("numeroYapePlin", NUMERO_YAPE_PLIN);
+            model.addAttribute("qrCodeBase64", generarQr(reserva));
             model.addAttribute("errorGeneral", ex.getMessage());
             return "pagos/formulario";
         }
@@ -78,6 +90,12 @@ public class PagoController {
             redirectAttributes.addFlashAttribute("errorGeneral", ex.getMessage());
         }
         return "redirect:/admin/reservas";
+    }
+
+    private String generarQr(Reserva reserva) {
+        String contenido = "Yape / Plin " + NUMERO_YAPE_PLIN + " - Reserva " + reserva.getCodigoReserva()
+                + " - S/ " + reserva.getMontoTotal();
+        return qrCodeGenerator.generarPngBase64(contenido);
     }
 
     private Reserva obtenerReservaDelPropietario(Long id, Authentication authentication) {

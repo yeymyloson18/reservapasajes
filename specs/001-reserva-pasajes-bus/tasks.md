@@ -183,6 +183,22 @@ description: "Task list for Reserva de Pasajes de Bus VRAEM"
 
 ---
 
+## Phase 9: Tercera revisión — navegación, pago, seguridad de cuenta y archivado (2026-07-16)
+
+**Purpose**: El usuario reportó 13 puntos tras probar el sistema por tercera vez. Se confirmaron 3 decisiones bloqueantes antes de programar (ver Clarifications de spec.md, sesión "tercera revisión"): bloqueo de cuenta a los 5 intentos fallidos, mantener el mecanismo de mostrar la clave temporal en pantalla (sin SMTP disponible), y archivado manual de viajes solo cuando están COMPLETO. Se confirmó que 3 de los 13 puntos reportados ya estaban satisfechos por el diseño existente y no requirieron código (reservar múltiples pasajes, estado "pendiente" hasta confirmación del ADMIN, y que el ADMIN nunca edita/elimina pasajeros de una reserva).
+
+- [X] T068 [P] Navegación real: enlace "← Volver al panel" solo-ADMIN en `viajes/lista.html`; enlaces "volver" con `history.back()` en `pagos/formulario.html` y `reservas/detalle.html`, reemplazando destinos fijos (FR-031).
+- [X] T069 [P] QR de pago Yape/Plin: dependencia `com.google.zxing:core` en `pom.xml`; nuevo `pagos/service/QrCodeGenerator.java` (PNG en base64 vía `BitMatrix`); `PagoController` agrega el QR y el número de destino al modelo; `pagos/formulario.html` lo muestra. `reservas/detalle.html` agrega una tarjeta de "Comprobante de pago" cuando la reserva está `PENDIENTE` con un `Pago` ya registrado (FR-028).
+- [X] T070 Bloqueo de cuenta tras 5 intentos fallidos: campo `Usuario.intentosFallidos` + `INTENTOS_MAXIMOS=5`, `registrarIntentoFallido()`, `resetearIntentosFallidos()`, `estaBloqueado()`; `UsuarioDetailsService` marca `accountLocked`; nuevo `security/AccountLoginFailureHandler` (incrementa el contador en credenciales incorrectas, redirige a `/login?locked` si la cuenta ya está bloqueada); `RolBasedAuthenticationSuccessHandler` resetea el contador en login exitoso; `UsuarioService.recuperarPassword(...)` también lo resetea; `auth/login.html` agrega el mensaje de cuenta bloqueada (FR-026).
+- [X] T071 [P] Cambiar contraseña desde el perfil: nuevo `UsuarioService.cambiarPassword(...)`, `auth/controller/PerfilController.java` (`GET`/`POST /perfil/password`), `CambiarPasswordForm`, vista `auth/perfil.html`, enlace "Mi perfil" en `fragments/layout.html` (FR-027).
+- [X] T072 [P] Mostrar camioneta disponible: placa de la camioneta agregada a cada tarjeta de `viajes/lista.html` (FR-004, ya cubierto por la relación `Viaje.camioneta` existente).
+- [X] T073 [P] Notificación de reservas pendientes: banner de alerta en `admin/panel.html` cuando `resumen.reservasPendientes() > 0`, con enlace a `/admin/reservas` (FR-029).
+- [X] T074 Archivar viaje: campo `Viaje.archivado` + `archivar()`; `ViajeRepository.findAllByArchivadoOrderByFechaAscHoraAsc(...)`; `ViajeService.listarDisponibles()`/`listarTodos()` filtran `archivado=false`, nuevos `archivarViaje(id)` (rechaza si quedan asientos libres) y `listarArchivados()`; `AdminViajeController` agrega `POST /admin/viajes/{id}/archivar` y `GET /admin/viajes/archivados`; botón "Archivar" (solo si el viaje está COMPLETO) y enlace "Ver archivados" en `admin/gestionar-viajes.html`; nueva vista `admin/viajes-archivados.html` (sin acciones de editar/eliminar pasajeros) (FR-030).
+- [X] T075 Tests nuevos: `UsuarioTest` (bloqueo/reseteo de intentos fallidos), `UsuarioServiceTest.cambiarPasswordActualizaElHashYGuarda`, `AuthControllerIT.bloqueaLaCuentaTrasCincoIntentosFallidosAunqueLuegoUseLaClaveCorrecta`, `ViajeServiceTest.archivarViajeRechazaSiQuedanAsientosLibres`/`archivarViajeMarcaArchivadoCuandoEstaCompleto`, `AdminViajeControllerIT.archivarUnViajeCompletoLoSacaDeLaGestionActivaYLoMuestraEnArchivados`.
+- [X] T076 Actualizar `spec.md` (Clarifications de la tercera revisión, FR-026 a FR-031 nuevos, Edge Cases, Key Entities, Assumptions) y `data-model.md` (`Usuario.intentosFallidos`, `Viaje.archivado`) para reflejar las decisiones de esta fase.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

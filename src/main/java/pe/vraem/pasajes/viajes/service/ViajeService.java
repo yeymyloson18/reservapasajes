@@ -43,17 +43,25 @@ public class ViajeService {
     @Transactional(readOnly = true)
     public List<Viaje> listarDisponibles() {
         LocalDate hoy = LocalDate.now();
-        return viajeRepository.findAllByOrderByFechaAscHoraAsc().stream()
+        return viajeRepository.findAllByArchivadoOrderByFechaAscHoraAsc(false).stream()
                 .filter(viaje -> !viaje.getFecha().isBefore(hoy))
                 .toList();
     }
 
     /**
-     * Lista todos los viajes (pasados y futuros) para la gestion del ADMIN.
+     * Lista todos los viajes no archivados (pasados y futuros) para la gestion del ADMIN.
      */
     @Transactional(readOnly = true)
     public List<Viaje> listarTodos() {
-        return viajeRepository.findAllByOrderByFechaAscHoraAsc();
+        return viajeRepository.findAllByArchivadoOrderByFechaAscHoraAsc(false);
+    }
+
+    /**
+     * Lista los viajes archivados (se llenaron y el ADMIN los archivo), para consulta historica.
+     */
+    @Transactional(readOnly = true)
+    public List<Viaje> listarArchivados() {
+        return viajeRepository.findAllByArchivadoOrderByFechaAscHoraAsc(true);
     }
 
     @Transactional(readOnly = true)
@@ -132,5 +140,21 @@ public class ViajeService {
 
         asientoRepository.deleteAll(asientoRepository.findAllByViajeOrderByNumeroAsc(viaje));
         viajeRepository.delete(viaje);
+    }
+
+    /**
+     * Archiva un viaje que ya se lleno (sin asientos libres), sacandolo de las listas
+     * activas mientras conserva sus reservas y pasajeros para consulta historica.
+     */
+    @Transactional
+    public void archivarViaje(Long id) {
+        Viaje viaje = obtenerDetalle(id);
+
+        if (contarAsientosLibres(viaje) > 0) {
+            throw new ViajeInvalidoException("Solo se puede archivar un viaje sin asientos libres");
+        }
+
+        viaje.archivar();
+        viajeRepository.save(viaje);
     }
 }

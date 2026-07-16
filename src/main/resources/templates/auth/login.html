@@ -15,6 +15,10 @@
         <div class="alert alert-danger" th:if="${param.error}">
             Email o contrasena incorrectos.
         </div>
+        <div class="alert alert-danger" th:if="${param.locked}">
+            Tu cuenta fue bloqueada por intentos fallidos.
+            <a th:href="@{/recuperar-password}">Recupera tu contrasena</a> para continuar.
+        </div>
         <div class="alert alert-info" th:if="${param.logout}">
             Sesion cerrada correctamente.
         </div>

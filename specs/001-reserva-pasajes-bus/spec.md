@@ -34,6 +34,16 @@ El usuario probó el sistema de nuevo y pidió revertir dos decisiones tomadas e
 - Q: ¿El ADMIN necesita una pantalla para ver/editar/eliminar viajes ya creados? → A: Sí. Se agrega "Gestionar viajes" en el panel ADMIN (antes no existía ningún enlace en la interfaz hacia las funciones de editar/eliminar, aunque las rutas ya existían).
 - Q: ¿El ADMIN necesita ver la lista de usuarios registrados? → A: Sí. Se agrega una vista de usuarios (DNI, nombre, email, rol) en el panel ADMIN.
 
+### Session 2026-07-16 (tercera revisión — navegación, pago, seguridad de cuenta y archivado)
+
+El usuario probó el sistema por tercera vez y reportó 13 puntos pendientes. Antes de programar se confirmaron 3 decisiones bloqueantes:
+
+- Q: ¿Cuántos intentos fallidos de login consecutivos bloquean una cuenta? → A: **5 intentos**. Un login exitoso o una recuperación de contraseña exitosa resetean el contador a 0.
+- Q: ¿La recuperación de contraseña debe enviar un correo real ahora que se pidió explícitamente? → A: No hay credenciales SMTP disponibles todavía; se mantiene el mecanismo actual (mostrar la clave temporal en pantalla), documentado como limitación temporal hasta contar con un proveedor de correo real.
+- Q: ¿Cómo decide el ADMIN archivar un viaje lleno? → A: Botón manual del ADMIN en "Gestionar viajes", habilitado únicamente cuando el viaje está COMPLETO (sin asientos libres).
+
+Se confirmó además que los siguientes puntos reportados ya estaban satisfechos por el diseño existente y no requirieron cambios: reservar tantos pasajes como se quiera (cada Reserva es de un asiento, se repite el flujo por cada uno); el estado "pendiente" hasta que el ADMIN confirme el pago (comportamiento ya vigente); y que el ADMIN nunca pueda editar ni eliminar los datos de un pasajero de una reserva ya creada (esa funcionalidad nunca existió y el archivado de viajes no la introduce).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Comprar un pasaje de principio a fin (Priority: P1)
@@ -105,6 +115,9 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - ¿Qué ocurre si el nombre ingresado en el registro contiene números o símbolos, o la contraseña no cumple la complejidad mínima? El sistema rechaza el registro e indica el campo inválido.
 - ¿Qué ocurre si un viaje ya no tiene asientos libres? El listado de viajes lo muestra como "COMPLETO" y no permite entrar a seleccionar asientos.
 - ¿Qué ocurre si un pasajero pide recuperar su contraseña con un email que no existe? El sistema indica que no existe una cuenta con ese email, sin generar ninguna contraseña.
+- ¿Qué ocurre si un usuario ingresa una contraseña incorrecta 5 veces seguidas? La cuenta queda bloqueada (incluso si luego ingresa la contraseña correcta) hasta que recupera su contraseña, momento en el que el bloqueo se levanta automáticamente.
+- ¿Qué ocurre si el ADMIN intenta archivar un viaje que todavía tiene asientos libres? El sistema rechaza la acción e indica que solo se pueden archivar viajes sin asientos libres.
+- ¿Qué ocurre con las reservas y pasajeros de un viaje archivado? Se conservan intactos y siguen siendo consultables desde "Ver archivados"; el archivado nunca borra ni permite editar datos de pasajeros.
 
 ## Requirements *(mandatory)*
 
@@ -135,12 +148,18 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - **FR-023**: El sistema MUST ofrecer al rol ADMIN una pantalla de "Gestionar viajes" que liste todos los viajes (pasados y futuros) con acciones para editar, eliminar, y ver las reservas de cada viaje especifico.
 - **FR-024**: El sistema MUST ofrecer al rol ADMIN una vista con la lista de todos los usuarios registrados (DNI, nombre, email, rol).
 - **FR-025**: El sistema MUST mostrar mensajes de confirmación visibles al usuario despues de crear/editar/eliminar un viaje, crear una reserva, registrar un pago, y confirmar un pago; y mensajes de error claros cuando una accion no se puede completar.
+- **FR-026**: El sistema MUST bloquear una cuenta tras 5 intentos de inicio de sesión fallidos consecutivos, rechazando el acceso aunque luego se ingrese la contraseña correcta, y MUST mostrar un mensaje que indique el bloqueo con un enlace a la recuperación de contraseña. Un login exitoso o una recuperación de contraseña exitosa MUST resetear el contador de intentos fallidos a 0, desbloqueando la cuenta.
+- **FR-027**: El sistema MUST permitir a cualquier usuario autenticado ver su perfil (DNI, nombre, email) y cambiar su contraseña, sujeta a la misma regla de complejidad mínima del registro (FR-001).
+- **FR-028**: El sistema MUST mostrar, en la pantalla de pago, un código QR (Yape/Plin) junto con el número de destino, para facilitar el pago sin necesidad de teclearlo manualmente.
+- **FR-029**: El sistema MUST notificar al ADMIN, en su panel principal, cuando existan reservas pendientes de confirmar pago, con un enlace directo al listado de reservas para revisarlas.
+- **FR-030**: El sistema MUST permitir al ADMIN archivar manualmente un viaje únicamente cuando no tenga asientos libres (esté "COMPLETO"). Un viaje archivado MUST dejar de aparecer en la lista de viajes disponibles para pasajeros y en "Gestionar viajes", pero MUST seguir siendo consultable (junto con sus reservas y pasajeros) desde una vista de viajes archivados. El archivado MUST NOT eliminar ni permitir editar los datos de los pasajeros de las reservas asociadas.
+- **FR-031**: El sistema MUST ofrecer, en las pantallas de pago y de detalle de boleto/reserva, un control de "volver" que regrese a la pantalla anterior real del navegador, en vez de dirigir siempre a un destino fijo.
 
 ### Key Entities
 
-- **Usuario**: Persona que usa el sistema; atributos: DNI (único, 8 dígitos, solo validado por formato), nombre, email (único), contraseña (almacenada de forma encriptada), rol (PASAJERO o ADMIN).
+- **Usuario**: Persona que usa el sistema; atributos: DNI (único, 8 dígitos, solo validado por formato), nombre, email (único), contraseña (almacenada de forma encriptada), rol (PASAJERO o ADMIN), número de intentos de login fallidos consecutivos (se resetea al iniciar sesión con éxito o al recuperar la contraseña; la cuenta se bloquea al llegar a 5).
 - **Camioneta (vehículo, también referido como "bus")**: Unidad de transporte asignada a los viajes; atributos: identificador, placa, ruta que cubre habitualmente. "Bus" y "Camioneta" se usan como sinónimos en este documento; la entidad canónica es `Camioneta`.
-- **Viaje**: Salida programada entre dos puntos del recorrido Ayacucho-VRAEM; atributos: origen, destino, fecha (no anterior a hoy), hora, camioneta asignada, chofer (nombre, campo de texto simple), precio por asiento. Siempre tiene exactamente 4 Asientos (fijo, no configurable). Se relaciona con múltiples Asientos y puede tener múltiples Reservas.
+- **Viaje**: Salida programada entre dos puntos del recorrido Ayacucho-VRAEM; atributos: origen, destino, fecha (no anterior a hoy), hora, camioneta asignada, chofer (nombre, campo de texto simple), precio por asiento, archivado (indica si el ADMIN lo sacó de las listas activas tras llenarse). Siempre tiene exactamente 4 Asientos (fijo, no configurable). Se relaciona con múltiples Asientos y puede tener múltiples Reservas.
 - **Asiento**: Unidad reservable dentro de un viaje; atributos: número (1 a 4), posición (el asiento 1 va adelante junto al chofer; los asientos 2-4 van juntos atrás; se deriva del número, no es un campo separado), estado (libre/reservado/pagado); pertenece a un único Viaje.
 - **Reserva**: Solicitud de un asiento hecha por un Usuario para un Viaje; atributos: usuario comprador, viaje, asiento elegido (con nombre y DNI del pasajero que viajará), monto total (= precio del viaje), estado (pendiente/pagado/expirada), fecha de creación. Se relaciona con un Pago. Cada Reserva cubre exactamente un Asiento; un pasajero que quiere varios asientos crea varias Reservas.
 - **Pago**: Registro del intento de cobro de una Reserva; atributos: método (Yape o Plin), estado, referencia/número de operación; pertenece a una única Reserva.
@@ -169,4 +188,7 @@ Un administrador consulta el listado de reservas realizadas por los pasajeros y 
 - **Rutas cubiertas**: las rutas del sistema conectan Ayacucho con San Francisco, Sivia, Santa Rosa, Kimbiri y Pichari (VRAEM), pudiendo un viaje tener como origen o destino cualquiera de estos puntos.
 - **Chofer**: se registra como un campo de texto simple del Viaje (nombre del chofer), sin una entidad `Chofer` separada ni gestión propia (alta/edición/eliminación independiente). No se contempla foto ni datos adicionales del chofer en esta versión.
 - **Ruta como entidad**: "ruta" sigue siendo el par origen/destino de cada Viaje; no se crea una entidad `Ruta` con gestión propia. Tampoco se agregan campos de capacidad o foto a `Camioneta`.
-- **Recuperación de contraseña**: dado que no hay servidor de correo (SMTP) configurado, la recuperación de contraseña genera una contraseña temporal y la muestra una única vez en pantalla, en vez de enviarla por email. Esto es una medida simplificada para esta versión, no un mecanismo de recuperación seguro para producción con usuarios reales fuera de un entorno controlado.
+- **Recuperación de contraseña**: dado que no hay servidor de correo (SMTP) configurado, la recuperación de contraseña genera una contraseña temporal y la muestra una única vez en pantalla, en vez de enviarla por email. Esto es una medida simplificada para esta versión, no un mecanismo de recuperación seguro para producción con usuarios reales fuera de un entorno controlado. Sigue siendo una limitación temporal: cuando se cuente con un proveedor de correo real, este mecanismo MUST reemplazarse por un envío de correo genuino.
+- **Bloqueo de cuenta**: 5 intentos de login fallidos consecutivos bloquean la cuenta, incluso ante la contraseña correcta. Un login exitoso o una recuperación de contraseña resetean el contador. No hay un mecanismo de desbloqueo alternativo (p. ej. por soporte) en esta versión.
+- **QR de pago**: el código QR generado en la pantalla de pago codifica un texto simple (número de Yape/Plin y datos de la reserva) mediante una librería local de generación de QR; no existe integración real con las APIs de Yape o Plin para iniciar o verificar el pago automáticamente. La confirmación del pago sigue siendo manual por parte del ADMIN (ver Assumption "Confirmación de pago").
+- **Archivado de viajes**: es una acción manual y reversible solo por intervención directa en los datos (no hay un botón de "desarchivar" en esta versión). Un viaje archivado conserva todas sus Reservas, Asientos y datos de pasajeros sin cambios; el ADMIN puede consultarlos pero no editarlos ni eliminarlos, evitando que se alteren registros de pasajeros que ya viajaron.

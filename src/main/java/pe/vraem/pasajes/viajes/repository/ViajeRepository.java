@@ -9,4 +9,6 @@ import pe.vraem.pasajes.viajes.model.Viaje;
 public interface ViajeRepository extends JpaRepository<Viaje, Long> {
 
     List<Viaje> findAllByOrderByFechaAscHoraAsc();
+
+    List<Viaje> findAllByArchivadoOrderByFechaAscHoraAsc(boolean archivado);
 }

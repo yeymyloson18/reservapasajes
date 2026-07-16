@@ -9,6 +9,11 @@
     <main class="container">
         <h1 class="h3 mb-4">Panel de administracion</h1>
 
+        <div th:if="${resumen.reservasPendientes() > 0}" class="alert alert-warning d-flex justify-content-between align-items-center">
+            <span>Tienes <strong th:text="${resumen.reservasPendientes()}">0</strong> reserva(s) pendiente(s) de confirmar pago.</span>
+            <a class="btn btn-sm btn-warning" th:href="@{/admin/reservas}">Revisar ahora</a>
+        </div>
+
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-4">
                 <div class="card text-center">

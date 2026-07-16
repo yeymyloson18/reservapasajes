@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Viajes archivados - Panel ADMIN - Pasajes VRAEM</title>
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: nav}"></nav>
+
+    <main class="container">
+        <p class="mb-2"><a th:href="@{/admin/viajes}">&larr; Volver a gestionar viajes</a></p>
+
+        <h1 class="h3 mb-4">Viajes archivados</h1>
+
+        <div th:if="${#lists.isEmpty(viajes)}" class="alert alert-secondary">
+            Todavia no hay viajes archivados.
+        </div>
+
+        <div class="table-responsive" th:unless="${#lists.isEmpty(viajes)}">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Ruta</th>
+                        <th>Chofer</th>
+                        <th>Camioneta</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Precio</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="viaje : ${viajes}">
+                        <td th:text="${viaje.origen + ' &rarr; ' + viaje.destino}">Ruta</td>
+                        <td th:text="${viaje.chofer}">Chofer</td>
+                        <td th:text="${viaje.camioneta.placa}">ABC-123</td>
+                        <td th:text="${viaje.fecha}">2026-01-01</td>
+                        <td th:text="${viaje.hora}">08:00</td>
+                        <td>S/ <span th:text="${viaje.precio}">0.00</span></td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-secondary" th:href="@{/admin/reservas(viajeId=${viaje.id})}">Ver pasajeros</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

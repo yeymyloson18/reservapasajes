@@ -29,6 +29,7 @@ public class UsuarioDetailsService implements UserDetailsService {
         return User.withUsername(usuario.getEmail())
                 .password(usuario.getPasswordHash())
                 .authorities(List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().name())))
+                .accountLocked(usuario.estaBloqueado())
                 .build();
     }
 }

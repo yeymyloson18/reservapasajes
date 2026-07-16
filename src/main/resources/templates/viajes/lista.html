@@ -7,6 +7,10 @@
     <nav th:replace="~{fragments/layout :: nav}"></nav>
 
     <main class="container">
+        <p class="mb-2" sec:authorize="hasRole('ADMIN')" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+            <a th:href="@{/admin}">&larr; Volver al panel</a>
+        </p>
+
         <h1 class="h3 mb-4">Viajes disponibles</h1>
 
         <div th:if="${#lists.isEmpty(viajes)}" class="alert alert-secondary">
@@ -21,6 +25,9 @@
                         <h2 class="h5 card-title" th:text="${item.viaje().origen + ' &rarr; ' + item.viaje().destino}">Ruta</h2>
                         <p class="card-text mb-1">
                             <strong>Chofer:</strong> <span th:text="${item.viaje().chofer}">Nombre</span>
+                        </p>
+                        <p class="card-text mb-1">
+                            <strong>Bus:</strong> <span th:text="${item.viaje().camioneta.placa}">ABC-123</span>
                         </p>
                         <p class="card-text mb-1">
                             <strong>Fecha:</strong> <span th:text="${item.viaje().fecha}">2026-01-01</span>

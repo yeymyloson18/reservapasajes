@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(~{::title})}">
+    <title>Mi perfil - Pasajes VRAEM</title>
+</head>
+<body>
+    <nav th:replace="~{fragments/layout :: nav}"></nav>
+
+    <main class="container" style="max-width: 480px;">
+        <h1 class="h3 mb-4">Mi perfil</h1>
+
+        <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <p class="mb-1"><strong>DNI:</strong> <span th:text="${usuario.dni}">00000000</span></p>
+                <p class="mb-1"><strong>Nombre:</strong> <span th:text="${usuario.nombre}">Nombre</span></p>
+                <p class="mb-0"><strong>Email:</strong> <span th:text="${usuario.email}">correo@ejemplo.com</span></p>
+            </div>
+        </div>
+
+        <h2 class="h5 mb-3">Cambiar contrasena</h2>
+        <form th:action="@{/perfil/password}" th:object="${cambiarPasswordForm}" method="post">
+            <div class="mb-3">
+                <label class="form-label" for="nuevaPassword">Nueva contrasena</label>
+                <input type="password" class="form-control" id="nuevaPassword" th:field="*{nuevaPassword}" />
+                <div class="text-danger small" th:if="${#fields.hasErrors('nuevaPassword')}" th:errors="*{nuevaPassword}"></div>
+                <div class="form-text">Minimo 8 caracteres, al menos una mayuscula y un numero.</div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Actualizar contrasena</button>
+        </form>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

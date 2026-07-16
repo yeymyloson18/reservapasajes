@@ -7,7 +7,7 @@
     <nav th:replace="~{fragments/layout :: nav}"></nav>
 
     <main class="container" style="max-width: 640px;">
-        <p class="mb-2"><a th:href="@{/reservas}">&larr; Volver a mis reservas</a></p>
+        <p class="mb-2"><a href="#" onclick="history.back(); return false;">&larr; Volver</a></p>
 
         <div th:replace="~{fragments/layout :: pasos(${reserva.estado.name() == 'PAGADO' ? 4 : 3})}"></div>
 
@@ -21,8 +21,24 @@
             </div>
         </div>
 
-        <div th:if="${reserva.estado.name() == 'PENDIENTE'}" class="alert alert-warning">
+        <div th:if="${reserva.estado.name() == 'PENDIENTE' and pago == null}" class="alert alert-warning">
             Reserva pendiente de pago. Codigo provisional: <strong th:text="${reserva.codigoReserva}">ABCD1234</strong>
+        </div>
+
+        <div th:if="${reserva.estado.name() == 'PENDIENTE' and pago != null}" class="card border-warning mb-4">
+            <div class="card-header bg-warning-subtle">Comprobante de pago &mdash; pendiente de confirmacion</div>
+            <div class="card-body">
+                <p class="mb-1"><strong>Codigo provisional:</strong> <span th:text="${reserva.codigoReserva}">ABCD1234</span></p>
+                <p class="mb-1"><strong>Comprador:</strong> <span th:text="${reserva.usuario.nombre}">Nombre</span>
+                    (<span th:text="${reserva.usuario.email}">correo@example.com</span>)</p>
+                <p class="mb-1"><strong>Viaje:</strong>
+                    <span th:text="${reserva.viaje.origen + ' &rarr; ' + reserva.viaje.destino}">Ruta</span> &middot;
+                    <span th:text="${reserva.viaje.fecha}">2026-01-01</span> <span th:text="${reserva.viaje.hora}">08:00</span></p>
+                <p class="mb-1"><strong>Metodo:</strong> <span th:text="${pago.metodo}">YAPE</span> &mdash;
+                    <strong>Referencia:</strong> <span th:text="${pago.referencia}">000000</span></p>
+                <p class="mb-0"><strong>Monto:</strong> S/ <span th:text="${reserva.montoTotal}">0.00</span> &mdash;
+                    <span class="badge bg-warning text-dark">Esperando confirmacion del administrador</span></p>
+            </div>
         </div>
 
         <div th:if="${reserva.estado.name() == 'EXPIRADA'}" class="alert alert-secondary">
@@ -49,13 +65,6 @@
 
         <div th:if="${reserva.estado.name() == 'PENDIENTE' and pago == null}">
             <a class="btn btn-primary" th:href="@{/reservas/{id}/pago(id=${reserva.id})}">Pagar ahora</a>
-        </div>
-        <div th:if="${pago != null}" class="mt-3">
-            <p class="small text-muted">
-                Pago registrado: <span th:text="${pago.metodo}">YAPE</span> &mdash;
-                referencia <span th:text="${pago.referencia}">000000</span> &mdash;
-                estado <span th:text="${pago.estado}">PENDIENTE</span>
-            </p>
         </div>
     </main>
 
