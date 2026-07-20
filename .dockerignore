@@ -1,0 +1,12 @@
+target/
+.git/
+.github/
+.vscode/
+.idea/
+.specify/
+specs/
+*.md
+*.pptx
+log.txt
+tasks.md
+src/main/resources/application-local.properties
